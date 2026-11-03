@@ -393,7 +393,7 @@ async function runRaceSimulation() {
 .timeline-step {
   display: flex;
   gap: 0.85rem;
-  opacity: 0.45;
+  opacity: 0.78;
   transition: all 0.3s ease;
 }
 
