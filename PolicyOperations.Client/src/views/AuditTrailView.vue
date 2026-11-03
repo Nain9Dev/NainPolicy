@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import SourceChip from '../components/SourceChip.vue';
+import NextStep from '../components/NextStep.vue';
 import ViewHeader from '../components/ViewHeader.vue';
+import type { TabId } from '../architecture/tabRoute';
 import { useLocale } from '../i18n/locale';
 import { format } from '../i18n/messages';
 import { api, ApiError } from '../services/api';
 import { lastPolicy, lastRun, rememberRun } from '../services/session';
 import type { PolicyTransitionResponse, ScenarioSource } from '../types/contracts';
 
+const emit = defineEmits<{ (e: 'navigate', tab: TabId): void }>();
 const { t } = useLocale();
 
 const props = defineProps<{
@@ -192,6 +195,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
+    <NextStep tab="audit" @navigate="emit('navigate', $event)" />
   </div>
 </template>
 

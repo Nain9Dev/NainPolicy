@@ -7,6 +7,21 @@
 Relevant behavioural changes, newest first. Dates are the date the change was made, not released.
 A change is listed only when it alters behaviour, contracts, evidence or operating boundaries.
 
+## 0.22 — 2026-11-03 — One path through the tabs
+
+Governing spec: 010 (`Proposed`). Client only.
+
+- Tabs read in plain language: `How it works`, `Try it`, `Two at once`, `History`, `Controlled
+  failures` (`Cómo funciona`, `Pruébalo`, `Dos a la vez`, `Historial`, `Fallos controlados`).
+  Hashes are unchanged, so existing links keep working.
+- Every tab ends with a `Step n of 5` band that offers the next tab as one action; the last offers
+  the services page.
+- Cancelling a practised policy shows a closing card that says what the visitor did and offers its
+  history; the Spanish practice form has a Spanish default reason.
+- The engagement band states what a delivery includes (database, backend and frontend, with tests
+  and documentation), as the owner's own statement.
+- 3 new client tests (112 in total).
+
 ## 0.21 — 2026-11-03 — Design of an anonymous sandbox (documents only)
 
 ADR-010 and spec 009 record, as `Proposed` and design only, how a prospect could drive a policy

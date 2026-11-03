@@ -1,6 +1,6 @@
 # Traceability
 
-- Document version: 0.6
+- Document version: 0.7
 - Status: Active
 - Date: 2026-11-03
 - Scope: Approved rule identifier to the test that demonstrates it
@@ -214,6 +214,14 @@ Suite `C` — `PolicyOperations.Client` Vitest (`npm test`, no browser).
 | `REQ-196` Audit origin follows the answer | C | `labels a live transition list by its origin`; browser: simulated chip after a token-less read |
 | `REQ-197` continuity: Audit shows the driven policy or the last run first | C | `remembers the last policy driven by hand, latest wins, as a copy`, `remembers the last scenario run with its origin`, `forgets everything on demand`; browser: run → Audit shows two rows named as the last run; drive → Audit shows the driven policy |
 | `REQ-198` Audit never runs the demo on its own | — | Browser: opening `#audit` in a fresh session makes no request and shows the hint |
+
+## One path through the tabs (spec 010 proposed)
+
+| Requirement | Suite | Test |
+|---|---|---|
+| `REQ-221` (order) each tab points at the next, the last ends | C | `visits every tab exactly once, in display order`, `points each tab at the next one and ends after the last`, `numbers the steps from one` |
+| `REQ-220` `REQ-223` `REQ-224` keys in both locales | C | `defines exactly the same keys in both locales`, `leaves no string empty in either locale` |
+| `REQ-220` to `REQ-224` on screen | — | Browser walkthrough recorded in `docs/public-demo.md` (2026-11-03) |
 | `REQ-158` reduced motion: no flow, no auto walkthrough, stepping works | — | Browser walkthrough with `prefers-reduced-motion: reduce` emulated (2026-11-03) |
 
 ## Known gaps
