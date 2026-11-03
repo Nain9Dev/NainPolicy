@@ -215,6 +215,7 @@ SQL Server Standard Developer es gratuito para desarrollo/pruebas, pero no está
 - [Spec 009: sandbox anónimo contra la API real (solo diseño)](specs/009-anonymous-sandbox/spec.md)
 - [Spec 010: un camino por las pestañas](specs/010-journey/spec.md)
 - [Spec 011: sondas de salud honestas](specs/011-honest-health/spec.md)
+- [Spec 012: el historial en palabras llanas](specs/012-history-in-plain-words/spec.md)
 - [ADR-001: product direction](docs/decisions/ADR-001-product-direction.md)
 - [ADR-002: runtime and architecture](docs/decisions/ADR-002-runtime-and-architecture.md)
 - [ADR-003: lifecycle and security](docs/decisions/ADR-003-lifecycle-security-and-organization-boundary.md)

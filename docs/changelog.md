@@ -7,6 +7,17 @@
 Relevant behavioural changes, newest first. Dates are the date the change was made, not released.
 A change is listed only when it alters behaviour, contracts, evidence or operating boundaries.
 
+## 0.25 — 2026-11-03 — The history in plain words
+
+Governing spec: 012 (`Proposed`). Client only.
+
+- Each transition in the `History` tab opens with one sentence in the page language: when (in
+  the visitor's time zone), who, what changed with the state names a reader knows, and why when a
+  reason was recorded. The technical fields stay below it.
+- `Copy history` puts the ledger on the clipboard as numbered sentences with the policy, the
+  origin and each request identifier.
+- 5 new client tests (121 in total).
+
 ## 0.24 — 2026-11-03 — Narration stays on screen on phones
 
 Spec 006, `REQ-162`. Client only.

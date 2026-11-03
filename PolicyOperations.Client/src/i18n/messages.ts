@@ -124,6 +124,15 @@ export interface Messages {
   };
   views: { lifecycle: ViewText; concurrency: ViewText; audit: ViewText; resilience: ViewText };
   summary: { headline: string; server: string; final: string; synthetic: string };
+  history: {
+    sentence: string;
+    reason: string;
+    verbs: { activated: string; cancelled: string; changed: string };
+    summaryHead: string;
+    none: string;
+    copy: string;
+    copied: string;
+  };
   footer: { meta: string; architecture: string; source: string };
   race: {
     run: string;
@@ -450,6 +459,15 @@ const en: Messages = {
     synthetic: 'synthetic data',
   },
   footer: { meta: 'synthetic data · 0.00 € · MIT', architecture: 'Architecture', source: 'Source' },
+  history: {
+    sentence: 'On {when}, {actor} {verb} the policy ({from} → {to}).',
+    reason: 'Reason: {reason}.',
+    verbs: { activated: 'activated', cancelled: 'cancelled', changed: 'changed' },
+    summaryHead: 'History of policy {policy}',
+    none: 'No transitions recorded.',
+    copy: 'Copy history',
+    copied: 'Copied',
+  },
   race: {
     run: 'Run the race',
     running: 'Running the race…',
@@ -789,6 +807,15 @@ const es: Messages = {
     synthetic: 'datos sintéticos',
   },
   footer: { meta: 'datos sintéticos · 0,00 € · MIT', architecture: 'Arquitectura', source: 'Código' },
+  history: {
+    sentence: 'El {when}, {actor} {verb} la póliza ({from} → {to}).',
+    reason: 'Motivo: {reason}.',
+    verbs: { activated: 'activó', cancelled: 'canceló', changed: 'cambió' },
+    summaryHead: 'Historial de la póliza {policy}',
+    none: 'Sin transiciones registradas.',
+    copy: 'Copiar historial',
+    copied: 'Copiado',
+  },
   race: {
     run: 'Lanzar la carrera',
     running: 'Carrera en marcha…',
