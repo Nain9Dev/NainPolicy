@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import SourceChip from '../components/SourceChip.vue';
+import NextStep from '../components/NextStep.vue';
 import ViewHeader from '../components/ViewHeader.vue';
+import type { TabId } from '../architecture/tabRoute';
 import { useLocale } from '../i18n/locale';
 import { format } from '../i18n/messages';
 import { api, ApiError, type PolicyResult } from '../services/api';
@@ -16,6 +18,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'openTokenModal'): void;
+  (e: 'navigate', tab: TabId): void;
 }>();
 
 // The policy being driven and what the server last said about it.
@@ -44,7 +47,7 @@ const activateForm = ref({
 });
 
 const cancelForm = ref({
-  reason: 'Customer initiated statutory cancellation',
+  reason: t.value.lifecycle.defaultReason,
   ifMatch: '',
 });
 
@@ -198,6 +201,16 @@ function handleStaleAttempt() {
           <span class="fsm-desc">{{ t.lifecycle.stateHints.cancelled }}</span>
         </div>
       </div>
+    </div>
+
+    <!-- Closing card (REQ-222) -->
+    <div v-if="isCancelled" class="glass-panel done-card">
+      <div class="done-text">
+        <span class="eyebrow">{{ t.lifecycle.lastAnswer }} · {{ lastStatus }}</span>
+        <h3 class="done-title">{{ t.lifecycle.doneTitle }}</h3>
+        <p class="done-body">{{ t.lifecycle.doneBody }}</p>
+      </div>
+      <button type="button" class="btn btn-primary" @click="emit('navigate', 'audit')">{{ t.lifecycle.doneCta }} ›</button>
     </div>
 
     <!-- Feedback messages -->
@@ -366,6 +379,7 @@ function handleStaleAttempt() {
         </div>
       </div>
     </div>
+    <NextStep tab="workbench" @navigate="emit('navigate', $event)" />
   </div>
 </template>
 
@@ -469,6 +483,42 @@ function handleStaleAttempt() {
 
 .inspector-card .badge {
   white-space: nowrap;
+}
+
+.done-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem 2rem;
+  padding: 1.1rem 1.4rem;
+  flex-wrap: wrap;
+  border-color: rgba(128, 255, 0, 0.45);
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(128, 255, 0, 0.1), transparent 50%),
+    var(--bg-surface);
+}
+
+.done-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1 1 360px;
+  min-width: 0;
+}
+
+.done-title {
+  font-family: var(--font-heading);
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #ffffff;
+  margin: 0;
+}
+
+.done-body {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #cbd5e1;
+  max-width: 64ch;
 }
 
 .stale-card {

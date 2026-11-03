@@ -1,6 +1,6 @@
 # Documentation map
 
-- Document version: 0.12
+- Document version: 0.13
 - Status: Active
 - Date: 2026-11-03
 - Owner: Aitor Nain Mendoza Vallejo
@@ -62,6 +62,7 @@ If two approved sources conflict and neither has precedence, the affected work s
 | `specs/008-practice-mode/` | Lifecycle workbench usable without a token; one origin rule for authorized operations | 0.1 | Proposed | None |
 | `docs/decisions/ADR-010-anonymous-sandbox-for-hands-on-practice.md` | Anonymous, allow-listed, capped sandbox against the real API; design only | 0.1 | Proposed | None |
 | `specs/009-anonymous-sandbox/` | Design of the sandbox: surface, allow-list, isolation, caps, trial before enabling; no implementation authorized | 0.1 | Proposed, design only | None |
+| `specs/010-journey/` | Plain-language tab names, next-step band on every tab, closing card of the practice flow, delivery line | 0.1 | Proposed | None |
 | `AGENTS.md` | Canonical constitution for agents and contributors | 0.1 | Active | None |
 | `SECURITY.md` | Vulnerability reporting and security posture | 0.1 | Active | None |
 

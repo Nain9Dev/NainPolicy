@@ -12,6 +12,7 @@ const { t } = useLocale();
       <span class="eyebrow">{{ t.engage.eyebrow }}</span>
       <h2 id="engage-title" class="engage-title">{{ t.engage.title }}</h2>
       <p class="engage-body">{{ t.engage.body }}</p>
+      <p class="engage-deliver">{{ t.engage.deliver }}</p>
     </div>
     <div class="engage-actions">
       <a :href="LINKS.services" target="_blank" rel="noopener noreferrer" class="btn btn-primary">{{ t.engage.primary }} ↗</a>
@@ -55,6 +56,13 @@ const { t } = useLocale();
   font-size: 0.98rem;
   line-height: 1.55;
   color: #cbd5e1;
+  max-width: 70ch;
+}
+
+.engage-deliver {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--brand-green);
   max-width: 70ch;
 }
 

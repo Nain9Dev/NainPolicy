@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import NextStep from '../components/NextStep.vue';
 import ViewHeader from '../components/ViewHeader.vue';
+import type { TabId } from '../architecture/tabRoute';
 import { useLocale } from '../i18n/locale';
 import { format } from '../i18n/messages';
 import { api } from '../services/api';
 import type { HealthCheckResult } from '../types/contracts';
 
+const emit = defineEmits<{ (e: 'navigate', tab: TabId): void }>();
 const { t } = useLocale();
 
 const isProbingLiveness = ref(false);
@@ -216,6 +219,7 @@ async function probeReadiness() {
         </table>
       </div>
     </div>
+    <NextStep tab="resilience" @navigate="emit('navigate', $event)" />
   </div>
 </template>
 

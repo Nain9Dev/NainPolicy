@@ -2,13 +2,16 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import ConcurrencyRace, { type RacePhase } from '../components/ConcurrencyRace.vue';
 import SourceChip from '../components/SourceChip.vue';
+import NextStep from '../components/NextStep.vue';
 import ViewHeader from '../components/ViewHeader.vue';
+import type { TabId } from '../architecture/tabRoute';
 import { useLocale } from '../i18n/locale';
 import { format } from '../i18n/messages';
 import { STACKED_MAX_WIDTH } from '../architecture/blueprintLayout';
 import { api, ApiError } from '../services/api';
 import type { PublicDemoRunResponse, ScenarioSource } from '../types/contracts';
 
+const emit = defineEmits<{ (e: 'navigate', tab: TabId): void }>();
 const { t } = useLocale();
 
 const isRunning = ref(false);
@@ -261,6 +264,7 @@ async function runRaceSimulation() {
         <pre><code>{{ JSON.stringify(betaProblemDetails, null, 2) }}</code></pre>
       </div>
     </div>
+    <NextStep tab="concurrency" @navigate="emit('navigate', $event)" />
   </div>
 </template>
 

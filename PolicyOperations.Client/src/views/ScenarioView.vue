@@ -4,6 +4,7 @@ import ArchitectureBlueprint, { type BlueprintPhase } from '../components/Archit
 import EngageBand from '../components/EngageBand.vue';
 import HeroBand from '../components/HeroBand.vue';
 import SourceChip from '../components/SourceChip.vue';
+import NextStep from '../components/NextStep.vue';
 import ValueCards from '../components/ValueCards.vue';
 import { layoutFor, type BlueprintLayout } from '../architecture/blueprintLayout';
 import { buildTimeline, IDLE_FRAME, replayDelayMs, type BlueprintFrame, type NodeId } from '../architecture/blueprintTimeline';
@@ -450,6 +451,7 @@ async function copyEvidence() {
     </ul>
 
     <ValueCards @navigate="emit('navigate', $event)" />
+    <NextStep tab="scenario" @navigate="emit('navigate', $event)" />
     <EngageBand />
 
     <div v-if="run && showJson" class="glass-panel json-panel">
