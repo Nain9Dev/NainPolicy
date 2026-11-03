@@ -185,6 +185,12 @@ export interface Messages {
     latency: string;
     liveness: string;
     readiness: string;
+    outcomes: { healthy: string; waking: string; unhealthy: string; unreachable: string };
+    stageTitle: string;
+    stages: { asleep: string; waking: string; ready: string };
+    stageHints: { asleep: string; waking: string; ready: string };
+    retryIn: string;
+    untestedHint: string;
   };
   lifecycle: {
     states: { draft: string; active: string; cancelled: string };
@@ -519,6 +525,16 @@ const en: Messages = {
     latency: 'Latency',
     liveness: 'Liveness (/health)',
     readiness: 'SQL readiness (/health/ready)',
+    outcomes: { healthy: 'Ready', waking: 'Waking up', unhealthy: 'Error', unreachable: 'Unreachable' },
+    stageTitle: 'What the database is doing right now',
+    stages: { asleep: 'Asleep or unreachable', waking: 'Waking up', ready: 'Ready' },
+    stageHints: {
+      asleep: 'Nobody has used it for a while, or the API cannot be reached from here. A user would see a clear wait, not a broken screen.',
+      waking: 'The API answers 503 and says how many seconds to wait. The client waits and retries; nothing is lost and nothing is faked.',
+      ready: 'Requests are answered in milliseconds. This is the normal state while people are working.',
+    },
+    retryIn: 'the API asked to retry in {s} s',
+    untestedHint: 'Press a button above to ask the real API.',
   },
   lifecycle: {
     states: { draft: 'Draft', active: 'Active', cancelled: 'Cancelled' },
@@ -848,6 +864,16 @@ const es: Messages = {
     latency: 'Latencia',
     liveness: 'Proceso (/health)',
     readiness: 'SQL listo (/health/ready)',
+    outcomes: { healthy: 'Lista', waking: 'Despertando', unhealthy: 'Error', unreachable: 'Inaccesible' },
+    stageTitle: 'Qué hace la base de datos ahora mismo',
+    stages: { asleep: 'Dormida o inaccesible', waking: 'Despertando', ready: 'Lista' },
+    stageHints: {
+      asleep: 'Nadie la ha usado en un rato, o la API no es accesible desde aquí. Un usuario vería una espera clara, no una pantalla rota.',
+      waking: 'La API responde 503 y dice cuántos segundos esperar. El cliente espera y reintenta; nada se pierde y nada se finge.',
+      ready: 'Las peticiones se responden en milisegundos. Es el estado normal mientras la gente trabaja.',
+    },
+    retryIn: 'la API pidió reintentar en {s} s',
+    untestedHint: 'Pulsa un botón arriba para preguntar a la API real.',
   },
   lifecycle: {
     states: { draft: 'Borrador', active: 'Activa', cancelled: 'Cancelada' },

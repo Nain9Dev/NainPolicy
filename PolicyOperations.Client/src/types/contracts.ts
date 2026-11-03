@@ -93,10 +93,16 @@ export interface CancelPolicyRequest {
   reason: string;
 }
 
+/** What a health probe found; never guessed, never simulated (spec 011). */
+export type HealthOutcome = 'healthy' | 'waking' | 'unhealthy' | 'unreachable';
+
 export interface HealthCheckResult {
-  status: 'Healthy' | 'Degraded' | 'Unhealthy';
-  totalDurationMs: number;
+  outcome: HealthOutcome;
+  /** 0 when the API could not be reached at all. */
   statusCode: number;
+  totalDurationMs: number;
+  /** Seconds the API asked the client to wait, from `Retry-After`, when it sent one. */
+  retryAfterSeconds: number | null;
   timestamp: string;
   details?: Record<string, unknown>;
 }

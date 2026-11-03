@@ -194,37 +194,42 @@ export const api = {
   },
 
   /**
-   * Health probes with high-resolution client-side latency timing.
+   * Health probe (spec 011). The answer is what the API said, or that it could not be reached:
+   * 2xx is healthy, 503 is the free database waking (with its Retry-After), any other status is
+   * unhealthy, and a network failure is unreachable. There is no in-browser fallback here.
    */
   async probeHealth(endpoint: '/health' | '/health/ready'): Promise<HealthCheckResult> {
     const start = now();
+    let res: Response;
     try {
-      const res = await fetch(`${BASE_URL}${endpoint}`, {
-        method: 'GET',
-        cache: 'no-store',
-      });
-      if (res.ok) {
-        const durationMs = Math.round(now() - start);
-        let details: Record<string, unknown> | undefined;
-        try {
-          details = await res.json();
-        } catch {
-          // body was empty or not json
-        }
-
-        return {
-          status: 'Healthy',
-          statusCode: res.status,
-          totalDurationMs: durationMs,
-          timestamp: new Date().toISOString(),
-          details,
-        };
-      }
+      res = await fetch(`${BASE_URL}${endpoint}`, { method: 'GET', cache: 'no-store' });
     } catch {
-      // Standalone execution
+      return {
+        outcome: 'unreachable',
+        statusCode: 0,
+        totalDurationMs: Math.round(now() - start),
+        retryAfterSeconds: null,
+        timestamp: new Date().toISOString(),
+      };
     }
 
-    return mockPolicyEngine.probeHealth(endpoint);
+    const totalDurationMs = Math.round(now() - start);
+    let details: Record<string, unknown> | undefined;
+    try {
+      details = (await res.json()) as Record<string, unknown>;
+    } catch {
+      // Empty or non-JSON body: the status line is the answer.
+    }
+    const retryAfter = Number.parseInt(res.headers.get('Retry-After') ?? '', 10);
+
+    return {
+      outcome: res.ok ? 'healthy' : res.status === 503 ? 'waking' : 'unhealthy',
+      statusCode: res.status,
+      totalDurationMs,
+      retryAfterSeconds: Number.isFinite(retryAfter) ? retryAfter : null,
+      timestamp: new Date().toISOString(),
+      details,
+    };
   },
 
   /** Reads one policy; see `operate` for the origin rules (spec 008). */

@@ -7,6 +7,19 @@
 Relevant behavioural changes, newest first. Dates are the date the change was made, not released.
 A change is listed only when it alters behaviour, contracts, evidence or operating boundaries.
 
+## 0.23 — 2026-11-03 — Honest health probes and a readable backend state
+
+Governing spec: 011 (`Proposed`). Client only.
+
+- Defect fixed: the health probe fell back to the in-browser engine when the API did not answer
+  `2xx` and showed `Healthy` with `Simulated` details, on the very tab about honest failures. The
+  probe now reports `healthy`, `waking` (`503`, with the `Retry-After` seconds), `unhealthy` or
+  `unreachable`, and nothing else; the in-browser health stub is removed.
+- The `Controlled failures` tab shows the database in three plain-language stages (asleep or
+  unreachable, waking, ready), highlights the latest readiness answer and says what each stage
+  means for someone using the system. Outcomes read in the page language everywhere.
+- 4 new client tests (116 in total).
+
 ## 0.22 — 2026-11-03 — One path through the tabs
 
 Governing spec: 010 (`Proposed`). Client only.

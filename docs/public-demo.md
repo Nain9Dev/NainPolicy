@@ -156,6 +156,14 @@ Production after zip deploy:
 The residual slowness is the Azure SQL free-tier resume after idle (about 1 to 2 minutes), which
 the offer does not allow removing. The page probes readiness and retries (ADR-006).
 
+## Honest health probes, 2026-11-03
+
+Spec 011. Observed with Playwright and Chromium in `es-ES` at 1440 px without a backend: both
+probes report `Inaccesible` with status 0 and a measured round trip; the stage strip highlights
+`Dormida o inaccesible` with its plain-language hint; the history table carries the same word. No
+`Healthy` is shown without an answer from the API. The `waking` stage with `Retry-After` is covered
+by the unit test only; it needs the free database to be paused at the moment of the probe.
+
 ## One path through the tabs, 2026-11-03
 
 Spec 010. Observed with Playwright and Chromium in `es-ES` at 1440 px: tabs `Cómo funciona`,
