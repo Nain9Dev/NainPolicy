@@ -7,10 +7,12 @@ import type { TabId } from '../architecture/tabRoute';
 import { useLocale } from '../i18n/locale';
 import { format } from '../i18n/messages';
 import { api, ApiError, type PolicyResult } from '../services/api';
+import { formatMoment } from '../architecture/historyText';
+import { formatAmount, formatDay } from '../architecture/humanValues';
 import { rememberPolicy } from '../services/session';
 import type { PolicyResponse, ScenarioSource } from '../types/contracts';
 
-const { t } = useLocale();
+const { locale, t } = useLocale();
 
 const props = defineProps<{
   token: string;
@@ -357,7 +359,7 @@ function handleStaleAttempt() {
             </div>
             <div class="detail-row">
               <span class="detail-key">{{ t.lifecycle.amount }}</span>
-              <span class="detail-val">{{ currentPolicy.insuredAmount }} {{ currentPolicy.currency }}</span>
+              <span class="detail-val" :title="`${currentPolicy.insuredAmount} ${currentPolicy.currency}`">{{ formatAmount(currentPolicy.insuredAmount, currentPolicy.currency, locale) }}</span>
             </div>
             <div class="detail-row">
               <span class="detail-key">{{ t.lifecycle.currentVersion }}</span>
@@ -373,11 +375,11 @@ function handleStaleAttempt() {
             </div>
             <div v-if="currentPolicy.coverageStartDate" class="detail-row">
               <span class="detail-key">{{ t.lifecycle.coverage }}</span>
-              <span class="detail-val">{{ currentPolicy.coverageStartDate }} → {{ currentPolicy.coverageEndDate }}</span>
+              <span class="detail-val" :title="`${currentPolicy.coverageStartDate} → ${currentPolicy.coverageEndDate}`">{{ formatDay(currentPolicy.coverageStartDate, locale) }} → {{ formatDay(currentPolicy.coverageEndDate ?? '', locale) }}</span>
             </div>
             <div class="detail-row">
               <span class="detail-key">{{ t.lifecycle.created }}</span>
-              <span class="detail-val font-mono text-dim">{{ currentPolicy.createdAtUtc }}</span>
+              <span class="detail-val" :title="currentPolicy.createdAtUtc">{{ formatMoment(currentPolicy.createdAtUtc, locale) }}</span>
             </div>
           </div>
         </div>
