@@ -7,6 +7,18 @@
 Relevant behavioural changes, newest first. Dates are the date the change was made, not released.
 A change is listed only when it alters behaviour, contracts, evidence or operating boundaries.
 
+## 0.27 — 2026-11-03 — First paint without a third party in the way
+
+Governing spec: 014 (`Proposed`), ADR-011 (`Proposed`). Client only.
+
+- Urbanist and IBM Plex Mono are served from the client's own origin (`/fonts/`, latin subset,
+  `woff2`, `font-display: swap`) with the SIL Open Font License text of each family beside the
+  files. The page no longer requests anything from `fonts.googleapis.com` or `fonts.gstatic.com`.
+- The brand tokens sheet is loaded without blocking the first paint, with a `noscript` fallback;
+  the heading font is preloaded; `robots.txt` allows the whole site.
+- Measured with Lighthouse 12 on the same machine before and after (`docs/public-demo.md`):
+  mobile first paint 2.6 s to 1.5 s, speed index 4.3 s to 1.5 s, SEO 92 to 100.
+- 6 new client tests (131 in total); `@types/node` added as a development dependency for them.
 ## 0.26 — 2026-11-03 — Money and dates a reader understands
 
 Governing spec: 013 (`Proposed`). Client only.

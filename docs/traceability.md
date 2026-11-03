@@ -1,6 +1,6 @@
 # Traceability
 
-- Document version: 0.10
+- Document version: 0.11
 - Status: Active
 - Date: 2026-11-03
 - Scope: Approved rule identifier to the test that demonstrates it
@@ -248,6 +248,17 @@ Suite `C` — `PolicyOperations.Client` Vitest (`npm test`, no browser).
 | `REQ-251` dates in the locale | C | `writes a calendar date without a time, in the locale`; `formatMoment` covered by `transitionSentence` tests |
 | `REQ-252` unformattable values shown as they came | C | `keeps an unknown currency code visible instead of failing`, `leaves an unparsable value as it came` |
 | `REQ-158` reduced motion: no flow, no auto walkthrough, stepping works | — | Browser walkthrough with `prefers-reduced-motion: reduce` emulated (2026-11-03) |
+
+## First paint without third-party blocking (spec 014 proposed)
+
+| Requirement | Suite | Test |
+|---|---|---|
+| `REQ-260` no render-blocking third-party stylesheet; deferred ones have a `noscript` fallback | C | `requests no stylesheet from a third party in the render-blocking path`, `gives every deferred cross-origin stylesheet a noscript fallback` |
+| `REQ-261` fonts from the own origin, `swap`, licences shipped | C | `declares every web font from the own origin with swap and a shipped licence` |
+| `REQ-262` only the heading font is preloaded | C | `preloads only the heading font file` |
+| `REQ-263` latin range covers Spanish punctuation | C | `covers the latin range so Spanish punctuation renders in the web font` |
+| `REQ-264` valid `robots.txt` | C | `ships a robots.txt that allows the whole site` |
+| Measured effect and absence of third-party font requests | — | Lighthouse and Playwright capture recorded in `docs/public-demo.md` (2026-11-03) |
 
 ## Known gaps
 

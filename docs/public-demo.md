@@ -156,6 +156,32 @@ Production after zip deploy:
 The residual slowness is the Azure SQL free-tier resume after idle (about 1 to 2 minutes), which
 the offer does not allow removing. The page probes readiness and retries (ADR-006).
 
+## First paint, 2026-11-03
+
+Spec 014. Lighthouse 12.8 against the built client (`vite preview`, `http://localhost:5375/`)
+on the build machine, headless Chromium, default throttling of each preset, one run per cell.
+The two `naindev.com` hosts were unreachable from that machine, so the brand sheet and the
+ecosystem bar script failed fast in both runs; the fonts were fetched from Google before and from
+the same origin after. The numbers compare the two builds under the same conditions; they are not
+field data from `policy.naindev.com`.
+
+| Profile | Metric | Before | After |
+|---|---|---|---|
+| Mobile | First Contentful Paint | 2.6 s | 1.5 s |
+| Mobile | Largest Contentful Paint | 2.6 s | 2.1 s |
+| Mobile | Speed Index | 4.3 s | 1.5 s |
+| Mobile | Render-blocking estimate | 1,300 ms (fonts CSS, brand sheet, own CSS) | 450 ms (own CSS only) |
+| Mobile | Performance / SEO | 91 / 92 | 99 / 100 |
+| Desktop | First Contentful Paint | 0.9 s | 0.4 s |
+| Desktop | Largest Contentful Paint | 0.9 s | 0.5 s |
+| Desktop | Performance / SEO | 98 / 92 | 100 / 100 |
+
+Accessibility stayed at 100 and layout shift at 0 in every run. Playwright capture of the built
+page at 1440 px and 390 px: the only cross-origin requests are the ecosystem bar script and the
+deferred brand sheet (`media="print"` until loaded); the fonts come from `/fonts/` on the same
+origin; `document.fonts` reports Urbanist 500 to 900 and IBM Plex Mono 400 and 600 loaded, the
+mono 500 face is fetched only when a page uses it. Not observed: the ecosystem bar with the
+deferred brand sheet on the live page (`T-1406`).
 ## The history in plain words, 2026-11-03
 
 Spec 012. Observed with Playwright and Chromium in `es-ES` with the `Europe/Madrid` time zone after
