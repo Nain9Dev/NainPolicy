@@ -309,6 +309,22 @@ async function copyEvidence() {
       </div>
     </div>
 
+    <!-- Compact current step for phones: stays at the bottom while the tall sheet is on screen (REQ-162) -->
+    <div v-if="layout.id === 'stacked' && frames.length" class="mini-narrator glass-panel" aria-live="polite">
+      <div class="mini-text">
+        <span :class="['eyebrow', { 'eyebrow-rejected': currentFrame.tone === 'rejected' }]">{{ narration.eyebrow }}</span>
+        <span class="mini-title">{{ selectedGuide ? selectedGuide.name : narration.title }}</span>
+      </div>
+      <div class="mini-controls">
+        <button type="button" class="btn btn-secondary step-btn" :disabled="busy || currentIndex <= 1" :aria-label="t.blueprint.prev" @click="goPrevious">‹</button>
+        <button type="button" class="btn btn-secondary step-btn" :disabled="busy" :aria-pressed="walking" :aria-label="walkLabel" @click="toggleWalkthrough">
+          <svg v-if="walking" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="5" height="16" /><rect x="14" y="4" width="5" height="16" /></svg>
+          <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3" /></svg>
+        </button>
+        <button type="button" class="btn btn-secondary step-btn" :disabled="busy || atLast" :aria-label="t.blueprint.next" @click="goNext">›</button>
+      </div>
+    </div>
+
     <!-- Narrator band -->
     <div class="glass-panel narrator">
       <div class="narration" aria-live="polite">
@@ -513,6 +529,54 @@ async function copyEvidence() {
 
 .has-overlay :deep(.blueprint) {
   filter: saturate(0.85);
+}
+
+/* Compact current step on phones */
+.mini-narrator {
+  display: none;
+}
+
+@media (max-width: 719px) {
+  .mini-narrator {
+    position: sticky;
+    bottom: 0.5rem;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.6rem 0.8rem;
+    background: rgba(10, 22, 40, 0.96);
+    border-color: var(--brand-green);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+  }
+
+  .mini-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  .mini-text .eyebrow {
+    font-size: 0.6rem;
+  }
+
+  .mini-title {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mini-controls {
+    display: flex;
+    gap: 0.3rem;
+    flex-shrink: 0;
+  }
 }
 
 /* Narrator band */
