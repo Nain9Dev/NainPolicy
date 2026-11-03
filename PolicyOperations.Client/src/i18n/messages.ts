@@ -232,6 +232,7 @@ export interface Messages {
     status: string;
     doneTitle: string;
     doneBody: string;
+    doneBodyNoStale: string;
     doneCta: string;
     defaultReason: string;
   };
@@ -565,6 +566,7 @@ const en: Messages = {
     status: 'Status',
     doneTitle: 'You drove a whole policy',
     doneBody: 'You created it, activated it, had a stale write refused and cancelled it. Every change is on record; the history tab shows it as the server stored it.',
+    doneBodyNoStale: 'You created it, activated it and cancelled it. Every change is on record; the history tab shows it as the server stored it.',
     doneCta: 'Read its history',
     defaultReason: 'Cancelled at the customer request',
   },
@@ -893,6 +895,7 @@ const es: Messages = {
     status: 'Estado',
     doneTitle: 'Has conducido una póliza completa',
     doneBody: 'La has creado, activado, has visto rechazada una escritura obsoleta y la has cancelado. Cada cambio queda registrado; la pestaña de historial lo muestra tal y como lo guardó el servidor.',
+    doneBodyNoStale: 'La has creado, activado y cancelado. Cada cambio queda registrado; la pestaña de historial lo muestra tal y como lo guardó el servidor.',
     doneCta: 'Leer su historial',
     defaultReason: 'Cancelación a petición del cliente',
   },
