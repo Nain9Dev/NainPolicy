@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import ViewHeader from '../components/ViewHeader.vue';
 import { useLocale } from '../i18n/locale';
+import { format } from '../i18n/messages';
 import { api } from '../services/api';
 import type { HealthCheckResult } from '../types/contracts';
 
@@ -15,7 +16,7 @@ const latestReadiness = ref<HealthCheckResult | null>(null);
 
 interface ProbeLogEntry {
   id: string;
-  target: 'Liveness (/health)' | 'SQL Readiness (/health/ready)';
+  target: 'liveness' | 'readiness';
   status: 'Healthy' | 'Degraded' | 'Unhealthy';
   statusCode: number;
   durationMs: number;
@@ -31,7 +32,7 @@ async function probeLiveness() {
     latestLiveness.value = res;
     probeHistory.value.unshift({
       id: Math.random().toString(36).slice(2, 9),
-      target: 'Liveness (/health)',
+      target: 'liveness',
       status: res.status,
       statusCode: res.statusCode,
       durationMs: res.totalDurationMs,
@@ -49,7 +50,7 @@ async function probeReadiness() {
     latestReadiness.value = res;
     probeHistory.value.unshift({
       id: Math.random().toString(36).slice(2, 9),
-      target: 'SQL Readiness (/health/ready)',
+      target: 'readiness',
       status: res.status,
       statusCode: res.statusCode,
       durationMs: res.totalDurationMs,
@@ -75,7 +76,7 @@ async function probeReadiness() {
           @click="probeLiveness"
         >
           <span v-if="isProbingLiveness" class="spinner"></span>
-          <span>{{ isProbingLiveness ? 'Asking…' : 'Is the API up?' }}</span>
+          <span>{{ isProbingLiveness ? t.resilience.asking : t.resilience.apiUp }}</span>
         </button>
 
         <button
@@ -85,7 +86,7 @@ async function probeReadiness() {
           @click="probeReadiness"
         >
           <span v-if="isProbingReadiness" class="spinner"></span>
-          <span>{{ isProbingReadiness ? 'Connecting to SQL Server…' : 'Is the database awake?' }}</span>
+          <span>{{ isProbingReadiness ? t.resilience.connecting : t.resilience.dbAwake }}</span>
         </button>
       </div>
     </div>
@@ -95,23 +96,23 @@ async function probeReadiness() {
       <!-- Liveness Card -->
       <div class="glass-panel probe-card">
         <div class="card-head">
-          <h4>API process</h4>
+          <h4>{{ t.resilience.apiProcess }}</h4>
           <span
             v-if="latestLiveness"
             :class="['badge', latestLiveness.status === 'Healthy' ? 'badge-emerald' : 'badge-rose']"
           >
             {{ latestLiveness.status }}
           </span>
-          <span v-else class="badge badge-slate">Untested</span>
+          <span v-else class="badge badge-slate">{{ t.resilience.untested }}</span>
         </div>
         <p class="card-desc font-mono">GET /health</p>
 
         <div v-if="latestLiveness" class="metric-row">
-          <span class="label">Round trip</span>
+          <span class="label">{{ t.resilience.roundTrip }}</span>
           <span class="value font-mono">{{ latestLiveness.totalDurationMs }} ms</span>
         </div>
         <div v-if="latestLiveness" class="metric-row">
-          <span class="label">HTTP status</span>
+          <span class="label">{{ t.resilience.httpStatus }}</span>
           <span class="value font-mono">{{ latestLiveness.statusCode }}</span>
         </div>
       </div>
@@ -119,23 +120,23 @@ async function probeReadiness() {
       <!-- Readiness Card -->
       <div class="glass-panel probe-card">
         <div class="card-head">
-          <h4>SQL Server connection</h4>
+          <h4>{{ t.resilience.dbConnection }}</h4>
           <span
             v-if="latestReadiness"
             :class="['badge', latestReadiness.status === 'Healthy' ? 'badge-emerald' : 'badge-rose']"
           >
             {{ latestReadiness.status }}
           </span>
-          <span v-else class="badge badge-slate">Untested</span>
+          <span v-else class="badge badge-slate">{{ t.resilience.untested }}</span>
         </div>
         <p class="card-desc font-mono">GET /health/ready · SELECT 1</p>
 
         <div v-if="latestReadiness" class="metric-row">
-          <span class="label">Round trip</span>
+          <span class="label">{{ t.resilience.roundTrip }}</span>
           <span class="value font-mono highlight">{{ latestReadiness.totalDurationMs }} ms</span>
         </div>
         <div v-if="latestReadiness" class="metric-row">
-          <span class="label">HTTP status</span>
+          <span class="label">{{ t.resilience.httpStatus }}</span>
           <span class="value font-mono">{{ latestReadiness.statusCode }}</span>
         </div>
       </div>
@@ -144,36 +145,36 @@ async function probeReadiness() {
     <!-- Architectural Resilience Rules Grid -->
     <div class="glass-panel rules-panel">
       <div class="panel-header">
-        <h3>What the API promises (ADR-006)</h3>
-        <span class="badge badge-emerald">Approved</span>
+        <h3>{{ t.resilience.promisesTitle }}</h3>
+        <span class="badge badge-emerald">{{ t.resilience.approved }}</span>
       </div>
 
       <div class="rules-grid">
         <div class="rule-item">
           <div class="rule-number">01</div>
           <div class="rule-body">
-            <h4>Waits up to 60 s for a waking database</h4>
+            <h4>{{ t.resilience.promises[0] }}</h4>
           </div>
         </div>
 
         <div class="rule-item">
           <div class="rule-number">02</div>
           <div class="rule-body">
-            <h4>Answers 503 with Retry-After while it wakes</h4>
+            <h4>{{ t.resilience.promises[1] }}</h4>
           </div>
         </div>
 
         <div class="rule-item">
           <div class="rule-number">03</div>
           <div class="rule-body">
-            <h4>A failed cleanup never fails a run</h4>
+            <h4>{{ t.resilience.promises[2] }}</h4>
           </div>
         </div>
 
         <div class="rule-item">
           <div class="rule-number">04</div>
           <div class="rule-body">
-            <h4>Runs on 0.00 € of infrastructure</h4>
+            <h4>{{ t.resilience.promises[3] }}</h4>
           </div>
         </div>
       </div>
@@ -182,25 +183,25 @@ async function probeReadiness() {
     <!-- Telemetry History Log -->
     <div v-if="probeHistory.length > 0" class="glass-panel history-panel">
       <div class="panel-header">
-        <h3>Probe history</h3>
-        <span class="sub-hint">{{ probeHistory.length }} {{ probeHistory.length === 1 ? 'sample' : 'samples' }} this session</span>
+        <h3>{{ t.resilience.historyTitle }}</h3>
+        <span class="sub-hint">{{ probeHistory.length === 1 ? t.resilience.sample : format(t.resilience.samples, { n: probeHistory.length }) }}</span>
       </div>
 
       <div class="history-table-wrap">
         <table class="history-table">
           <thead>
             <tr>
-              <th>Time</th>
-              <th>Probe</th>
-              <th>Status</th>
-              <th>HTTP</th>
-              <th>Latency</th>
+              <th>{{ t.resilience.time }}</th>
+              <th>{{ t.resilience.probe }}</th>
+              <th>{{ t.resilience.status }}</th>
+              <th>{{ t.resilience.http }}</th>
+              <th>{{ t.resilience.latency }}</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="entry in probeHistory" :key="entry.id">
               <td class="font-mono text-dim">{{ entry.timestamp }}</td>
-              <td>{{ entry.target }}</td>
+              <td>{{ t.resilience[entry.target] }}</td>
               <td>
                 <span :class="['badge', entry.status === 'Healthy' ? 'badge-emerald' : 'badge-rose']">
                   {{ entry.status }}

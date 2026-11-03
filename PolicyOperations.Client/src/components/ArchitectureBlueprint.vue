@@ -186,6 +186,7 @@ const isLit = (id: NodeId) => props.frame.litNodes.includes(id);
 const isVisited = (id: NodeId) => props.visitedNodes.includes(id);
 const edgeLit = (id: EdgeId) => props.frame.litEdges.includes(id);
 const showFlow = computed(() => !props.reducedMotion && props.frame.index > 0);
+const showGhost = computed(() => !props.reducedMotion && props.phase === 'idle' && props.frame.index === 0);
 
 const versionLabel = computed(() => {
   const etag = props.frame.etag;
@@ -323,6 +324,13 @@ const rootClass = computed(() => [
         :class="{ lit: frame.guardHit }"
         marker-end="url(#bp-arrow)"
       />
+    </g>
+
+    <!-- Idle pulse: invites the first click (REQ-182) -->
+    <g v-if="showGhost" class="ghost" aria-hidden="true">
+      <circle r="9" class="ghost-halo" />
+      <circle r="4" class="ghost-core" />
+      <animateMotion :path="layout.ghostPath" dur="4.5s" repeatCount="indefinite" calcMode="linear" />
     </g>
 
     <!-- Packets -->
@@ -603,6 +611,23 @@ const rootClass = computed(() => [
 
 @keyframes march {
   to { stroke-dashoffset: -14; }
+}
+
+/* Idle pulse */
+.ghost {
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.ghost-core {
+  fill: #7dd3fc;
+  filter: url(#bp-glow);
+}
+
+.ghost-halo {
+  fill: #38bdf8;
+  opacity: 0.25;
+  filter: url(#bp-glow-soft);
 }
 
 /* Packets */

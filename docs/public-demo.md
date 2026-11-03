@@ -21,6 +21,10 @@ build (`vite preview`), without a backend, so every run was labelled `Simulated`
 | Deep link `#audit` | Opens the Audit tab directly |
 | Locale toggle | Switches every header and control, sets `lang`, stores `nainpolicy_locale` |
 | Mobile 390 px, `es-ES` | Hero, chips, sheet, band, rail, cards and engagement band stack; `scrollWidth` 390 |
+| Concurrency race (second pass) | `Lanzar la carrera`: both operators read `…AAAAAAE=`, Alpha's packet reaches SQL Server and the stored version becomes `…AAAAAAI=`, Beta's packet stops at the guard with the `412` burst and the red return path, `nada sobrescrito` under the database; stacked track on 390 px |
+| Idle pulse | A faint cyan pulse loops from the browser to SQL Server while no run is in progress; absent under reduced motion |
+| Hero proof state | After pointer intent without a backend the first chip turns red with the simulated-origin title; it would turn amber while waking and green when ready |
+| Secondary tabs in Spanish | Lifecycle, Concurrency, Audit and Resilience render every label, button, phase and message in Spanish; API values (`Draft`, ETags, paths) stay as returned |
 
 ## Client walkthrough, 2026-11-03
 

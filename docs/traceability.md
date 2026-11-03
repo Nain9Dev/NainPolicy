@@ -195,6 +195,11 @@ Suite `C` — `PolicyOperations.Client` Vitest (`npm test`, no browser).
 | `REQ-177` tabs addressable by hash | C | `maps each hash to its tab, case-insensitively`, `opens the blueprint for an empty or unknown hash`, `round-trips every tab through its hash`; browser: `#audit` opens the Audit tab |
 | `REQ-178` copyable run summary | C | `states the run id, origin, server time and page address`, `lists one line per step…`, `ends with the final state and the ledger size`, `labels a simulated run honestly and says so in Spanish too`; browser: clipboard content read back in both locales |
 | `REQ-179` Open Graph and Twitter metadata | — | Review of `index.html` |
+| `REQ-180` secondary views fully follow the locale | — | Browser walkthrough: Lifecycle, Concurrency, Audit and Resilience in Spanish (2026-11-03) |
+| `REQ-181` concurrency race drawn as a track following the real phases and ETags | — | Browser walkthrough: phases `read`, `alpha_committed`, `beta_rejected`, `completed` observed on desktop and phone |
+| `REQ-182` idle pulse along the request route; none under reduced motion | C | `runs the idle pulse from the browser to SQL Server`; browser: `.ghost` present when idle |
+| `REQ-183` hero proof reflects the database probe | — | Browser: `state-unavailable` with its title after pointer intent without a backend |
+| `REQ-184` client tests and build in CI | — | `.github/workflows/ci.yml` job `client-tests` |
 | `REQ-158` reduced motion: no flow, no auto walkthrough, stepping works | — | Browser walkthrough with `prefers-reduced-motion: reduce` emulated (2026-11-03) |
 
 ## Known gaps

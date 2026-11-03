@@ -64,6 +64,12 @@ describe('LAYOUTS (REQ-156)', () => {
         }
       });
 
+      it('runs the idle pulse from the browser to SQL Server (REQ-182)', () => {
+        const numbers = layout.ghostPath.match(/-?\d+(\.\d+)?/g)!.map(Number);
+        expect(touches({ x: numbers[0], y: numbers[1] }, layout.nodes.client)).toBe(true);
+        expect(touches({ x: numbers[numbers.length - 2], y: numbers[numbers.length - 1] }, layout.nodes.sql)).toBe(true);
+      });
+
       it('starts and ends each edge on the boundary of the nodes it joins', () => {
         for (const edge of EXPECTED_EDGES) {
           const [from, to] = edge.split('-') as [NodeId, NodeId];

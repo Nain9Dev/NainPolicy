@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { computed, onBeforeUnmount, ref } from 'vue';
 import { useLocale } from '../i18n/locale';
+import { api, type WarmState } from '../services/api';
 import { LINKS } from '../services/links';
 
 /** Value proposition above the blueprint (spec 007, REQ-170, REQ-171). Every proof chip is a verifiable fact. */
@@ -7,6 +9,19 @@ const emit = defineEmits<{ (e: 'run'): void }>();
 const { t } = useLocale();
 
 const PROOF_LINKS = [LINKS.repository, LINKS.ci, LINKS.repository, LINKS.repository];
+
+/* The first proof carries the real probe state once intent started it (REQ-183). */
+const warmState = ref<WarmState | null>(api.getWarmState());
+const stopWarm = api.onWarmState((state) => (warmState.value = state));
+onBeforeUnmount(stopWarm);
+
+const liveTitle = computed(() => {
+  const b = t.value.blueprint;
+  if (warmState.value === 'pending') return b.waking;
+  if (warmState.value === 'ready') return b.ready;
+  if (warmState.value === 'unavailable') return t.value.source.simulated.title;
+  return t.value.hero.proofs[0];
+});
 </script>
 
 <template>
@@ -25,7 +40,7 @@ const PROOF_LINKS = [LINKS.repository, LINKS.ci, LINKS.repository, LINKS.reposit
     </div>
     <ul class="proofs" aria-label="Proof">
       <li v-for="(proof, i) in t.hero.proofs" :key="proof">
-        <a :href="PROOF_LINKS[i]" target="_blank" rel="noopener noreferrer" class="proof">
+        <a :href="PROOF_LINKS[i]" target="_blank" rel="noopener noreferrer" :class="['proof', { [`state-${warmState}`]: i === 0 && warmState }]" :title="i === 0 ? liveTitle : undefined">
           <span class="proof-dot" aria-hidden="true"></span>
           <span>{{ proof }}</span>
         </a>
@@ -122,6 +137,27 @@ const PROOF_LINKS = [LINKS.repository, LINKS.ci, LINKS.repository, LINKS.reposit
   flex-shrink: 0;
   background: var(--brand-green);
   box-shadow: 0 0 8px var(--brand-green);
+}
+
+.proof.state-pending .proof-dot {
+  background: #ffd27a;
+  box-shadow: 0 0 8px #ffd27a;
+  animation: proof-pulse 1.2s ease-in-out infinite;
+}
+
+.proof.state-unavailable .proof-dot {
+  background: var(--brand-red);
+  box-shadow: 0 0 8px var(--brand-red);
+}
+
+@keyframes proof-pulse {
+  50% { opacity: 0.25; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proof.state-pending .proof-dot {
+    animation: none;
+  }
 }
 
 @media (max-width: 900px) {

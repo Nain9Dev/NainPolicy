@@ -26,7 +26,12 @@ Governing spec: 007 (`Proposed`); ADR-009 (`Proposed`). Client only; no API, con
 - Tabs are addressable by hash (`#blueprint`, `#lifecycle`, `#concurrency`, `#audit`,
   `#resilience`); a finished run can be copied as plain text; Open Graph and Twitter metadata are
   set.
-- 25 new client tests (97 in total).
+- Second pass: the Concurrency tab draws the race as a track (two operators, one stored version,
+  Alpha's write advancing it, Beta's write stopped at the guard with `412`), with a stacked variant
+  on phones; the idle blueprint carries a faint pulse along the request route; the first proof chip
+  of the hero reflects the real database probe; the four secondary tabs are fully localized; and
+  the client tests and build now run in CI (`client-tests` job).
+- 27 new client tests (99 in total).
 
 ## 0.15 — 2026-11-03 — Guided blueprint walkthrough
 

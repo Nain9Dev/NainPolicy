@@ -87,6 +87,23 @@ Notation: EARS ("When X, the system shall Y").
 - `REQ-179` When the page is shared on a social network or chat, it shall carry Open Graph and
   Twitter card metadata with the title, description and the existing portfolio cover image.
 
+### Second pass (same change, 2026-11-03)
+
+- `REQ-180` When a secondary view renders, every visitor-facing word (buttons, labels, phases,
+  badges, messages) shall follow the locale; API values (`Draft`, `Active`, `Cancelled`, ETags,
+  paths, codes) stay as the server returns them.
+- `REQ-181` When the Concurrency tab renders, it shall draw the race as a track: two operators
+  reading the same stored version, Alpha's write reaching SQL Server and advancing the version,
+  Beta's write stopping at the concurrency guard with a `412` and the version left untouched. The
+  track shall follow the real phases of the run and the ETags of the response.
+- `REQ-182` When the blueprint is idle and motion is allowed, a faint pulse shall travel the route
+  from the browser to SQL Server on a loop, so the sheet invites a click; under reduced motion it
+  shall not play.
+- `REQ-183` When the hero renders, its "live on Azure SQL" proof shall carry the real state of
+  the database probe once intent started it: unknown, waking, ready or unavailable, named as such.
+- `REQ-184` When a push or pull request reaches GitHub, the client tests and build shall run in
+  continuous integration next to the .NET suites.
+
 ## Acceptance evidence
 
 | Requirement | Evidence |
@@ -95,4 +112,7 @@ Notation: EARS ("When X, the system shall Y").
 | `REQ-176` | Vitest: `messages.test.ts` (same keys, non-empty, bounded) and `narration.test.ts` in both locales |
 | `REQ-177` (parsing) | Vitest: `tabRoute.test.ts` |
 | `REQ-178` | Vitest: `runSummary.test.ts` |
+| `REQ-182` (route) | Vitest: `blueprintLayout.test.ts` (`runs the idle pulse from the browser to SQL Server`) |
+| `REQ-180` `REQ-181` `REQ-183` | Browser walkthrough recorded in `docs/public-demo.md` |
+| `REQ-184` | `.github/workflows/ci.yml` job `client-tests`; green run on the pull request |
 | `REQ-170` `REQ-171` `REQ-172` `REQ-173` `REQ-175` `REQ-177` (browser) `REQ-179` | Browser walkthrough recorded in `docs/public-demo.md` with the date, in both locales, at 1440 px and 390 px |

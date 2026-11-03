@@ -115,6 +115,101 @@ export interface Messages {
   views: { lifecycle: ViewText; concurrency: ViewText; audit: ViewText; resilience: ViewText };
   summary: { headline: string; server: string; final: string; synthetic: string };
   footer: { meta: string; architecture: string; source: string };
+  race: {
+    run: string;
+    running: string;
+    phases: { idle: string; read: string; alpha_committed: string; beta_rejected: string; completed: string };
+    alpha: { name: string; role: string };
+    beta: { name: string; role: string };
+    reads: string;
+    holds: string;
+    alphaWrites: string;
+    alphaSaved: string;
+    alphaNewVersion: string;
+    betaWrites: string;
+    betaStale: string;
+    betaRefused: string;
+    betaNext: string;
+    savedBadge: string;
+    refusedBadge: string;
+    payloadTitle: string;
+    payloadHint: string;
+    track: { guard: string; guardRule: string; database: string; version: string; readsLabel: string; saved: string; refused: string; untouched: string };
+  };
+  audit: {
+    idLabel: string;
+    readHistory: string;
+    loadDemo: string;
+    loading: string;
+    listTitle: string;
+    listHint: string;
+    empty: string;
+    actor: string;
+    correlation: string;
+    reason: string;
+    id: string;
+  };
+  resilience: {
+    apiUp: string;
+    dbAwake: string;
+    asking: string;
+    connecting: string;
+    apiProcess: string;
+    dbConnection: string;
+    untested: string;
+    roundTrip: string;
+    httpStatus: string;
+    promisesTitle: string;
+    approved: string;
+    promises: string[];
+    historyTitle: string;
+    samples: string;
+    sample: string;
+    time: string;
+    probe: string;
+    status: string;
+    http: string;
+    latency: string;
+    liveness: string;
+    readiness: string;
+  };
+  lifecycle: {
+    states: { draft: string; active: string; cancelled: string };
+    stateHints: { draft: string; active: string; cancelled: string };
+    activateArrow: string;
+    cancelArrow: string;
+    tokenTitle: string;
+    tokenBody: string;
+    configure: string;
+    step1: string;
+    step2: string;
+    step3: string;
+    policyNumber: string;
+    insuredAmount: string;
+    currency: string;
+    createDraft: string;
+    insuredParty: string;
+    startDate: string;
+    endDate: string;
+    ifMatch: string;
+    activate: string;
+    reason: string;
+    cancel: string;
+    inspectorTitle: string;
+    noPolicy: string;
+    noPolicyHint: string;
+    identifier: string;
+    amount: string;
+    currentVersion: string;
+    storedRowversion: string;
+    insuredPartyLabel: string;
+    coverage: string;
+    created: string;
+    msgCreated: string;
+    msgActive: string;
+    msgCancelled: string;
+    msgStale: string;
+  };
 }
 
 /** Replaces `{key}` placeholders; an unknown placeholder stays visible so a missing value is noticed. */
@@ -307,6 +402,116 @@ const en: Messages = {
     synthetic: 'synthetic data',
   },
   footer: { meta: 'synthetic data · 0.00 € · MIT', architecture: 'Architecture', source: 'Source' },
+  race: {
+    run: 'Run the race',
+    running: 'Running the race…',
+    phases: {
+      idle: 'Ready',
+      read: 'Both operators read the same policy',
+      alpha_committed: 'Alpha saved first; the version changed',
+      beta_rejected: 'Beta still holds the old version: refused with 412',
+      completed: 'Done: nothing was overwritten',
+    },
+    alpha: { name: 'Operator Alpha', role: 'underwriter · saves first' },
+    beta: { name: 'Operator Beta', role: 'claims adjuster · arrives second' },
+    reads: 'Reads the policy',
+    holds: 'version {etag}',
+    alphaWrites: 'Activates it with that version',
+    alphaSaved: 'Saved: the stored version moves on',
+    alphaNewVersion: 'SQL Server assigns a new version.',
+    betaWrites: 'Cancels it with the version it read',
+    betaStale: 'STALE',
+    betaRefused: 'Refused: the version is stale',
+    betaNext: 'Beta must read again before changing anything.',
+    savedBadge: '200 saved',
+    refusedBadge: '412 refused',
+    payloadTitle: 'What Beta receives',
+    payloadHint: 'Problem Details body (RFC 9457) returned with the 412',
+    track: {
+      guard: 'API · concurrency guard',
+      guardRule: 'If-Match ≟ stored version',
+      database: 'SQL Server',
+      version: 'stored version',
+      readsLabel: 'reads',
+      saved: 'saved · new version',
+      refused: '412 · stale version',
+      untouched: 'nothing overwritten',
+    },
+  },
+  audit: {
+    idLabel: 'Policy identifier (GUID)',
+    readHistory: "Read this policy's history",
+    loadDemo: 'Load the demo ledger',
+    loading: 'Loading…',
+    listTitle: 'Transitions, oldest first',
+    listHint: '{n} recorded state changes',
+    empty: 'No transitions recorded for this identifier.',
+    actor: 'actor',
+    correlation: 'correlation',
+    reason: 'reason',
+    id: 'id',
+  },
+  resilience: {
+    apiUp: 'Is the API up?',
+    dbAwake: 'Is the database awake?',
+    asking: 'Asking…',
+    connecting: 'Connecting to SQL Server…',
+    apiProcess: 'API process',
+    dbConnection: 'SQL Server connection',
+    untested: 'Untested',
+    roundTrip: 'Round trip',
+    httpStatus: 'HTTP status',
+    promisesTitle: 'What the API promises (ADR-006)',
+    approved: 'Approved',
+    promises: ['Waits up to 60 s for a waking database', 'Answers 503 with Retry-After while it wakes', 'A failed cleanup never fails a run', 'Runs on 0.00 € of infrastructure'],
+    historyTitle: 'Probe history',
+    samples: '{n} samples this session',
+    sample: '1 sample this session',
+    time: 'Time',
+    probe: 'Probe',
+    status: 'Status',
+    http: 'HTTP',
+    latency: 'Latency',
+    liveness: 'Liveness (/health)',
+    readiness: 'SQL readiness (/health/ready)',
+  },
+  lifecycle: {
+    states: { draft: 'Draft', active: 'Active', cancelled: 'Cancelled' },
+    stateHints: { draft: 'created, not yet in force', active: 'in force', cancelled: 'final, cannot change again' },
+    activateArrow: 'activate · If-Match',
+    cancelArrow: 'cancel · If-Match',
+    tokenTitle: 'This tab sends real requests with your own token',
+    tokenBody: 'A local JWT with organization_id and the role PolicyOperator. The Blueprint tab needs none.',
+    configure: 'Configure JWT',
+    step1: '1 · Create a draft',
+    step2: '2 · Activate it',
+    step3: '3 · Cancel it',
+    policyNumber: 'Policy number',
+    insuredAmount: 'Insured amount',
+    currency: 'Currency',
+    createDraft: 'Create draft',
+    insuredParty: 'Insured party reference',
+    startDate: 'Start date',
+    endDate: 'End date',
+    ifMatch: 'If-Match (the version you read)',
+    activate: 'Activate',
+    reason: 'Cancellation reason',
+    cancel: 'Cancel',
+    inspectorTitle: 'The policy as the server sees it',
+    noPolicy: 'No policy yet.',
+    noPolicyHint: 'Step 1 creates a draft.',
+    identifier: 'Identifier',
+    amount: 'Insured amount',
+    currentVersion: 'Current version (ETag)',
+    storedRowversion: 'Stored rowversion',
+    insuredPartyLabel: 'Insured party',
+    coverage: 'Coverage period',
+    created: 'Created (UTC)',
+    msgCreated: 'Policy {n} created as a draft.',
+    msgActive: 'Policy is now active. The server issued a new version.',
+    msgCancelled: 'Policy cancelled. The audit ledger has the record.',
+    msgStale: '412 Precondition Failed: the version you sent is stale. Read the policy again.',
+  },
 };
 
 const es: Messages = {
@@ -494,6 +699,116 @@ const es: Messages = {
     synthetic: 'datos sintéticos',
   },
   footer: { meta: 'datos sintéticos · 0,00 € · MIT', architecture: 'Arquitectura', source: 'Código' },
+  race: {
+    run: 'Lanzar la carrera',
+    running: 'Carrera en marcha…',
+    phases: {
+      idle: 'Lista',
+      read: 'Los dos operadores leen la misma póliza',
+      alpha_committed: 'Alfa guardó primero; la versión cambió',
+      beta_rejected: 'Beta aún lleva la versión antigua: rechazada con 412',
+      completed: 'Hecho: nada se ha sobrescrito',
+    },
+    alpha: { name: 'Operador Alfa', role: 'suscriptor · guarda primero' },
+    beta: { name: 'Operador Beta', role: 'siniestros · llega segundo' },
+    reads: 'Lee la póliza',
+    holds: 'versión {etag}',
+    alphaWrites: 'La activa con esa versión',
+    alphaSaved: 'Guardado: la versión almacenada avanza',
+    alphaNewVersion: 'SQL Server asigna una versión nueva.',
+    betaWrites: 'La cancela con la versión que leyó',
+    betaStale: 'OBSOLETA',
+    betaRefused: 'Rechazada: la versión está obsoleta',
+    betaNext: 'Beta debe volver a leer antes de cambiar nada.',
+    savedBadge: '200 guardado',
+    refusedBadge: '412 rechazado',
+    payloadTitle: 'Lo que recibe Beta',
+    payloadHint: 'Cuerpo Problem Details (RFC 9457) devuelto con el 412',
+    track: {
+      guard: 'API · guardián de concurrencia',
+      guardRule: 'If-Match ≟ versión almacenada',
+      database: 'SQL Server',
+      version: 'versión almacenada',
+      readsLabel: 'lee',
+      saved: 'guardado · versión nueva',
+      refused: '412 · versión obsoleta',
+      untouched: 'nada sobrescrito',
+    },
+  },
+  audit: {
+    idLabel: 'Identificador de la póliza (GUID)',
+    readHistory: 'Leer el historial de esta póliza',
+    loadDemo: 'Cargar el libro de la demo',
+    loading: 'Cargando…',
+    listTitle: 'Transiciones, la más antigua primero',
+    listHint: '{n} cambios de estado registrados',
+    empty: 'No hay transiciones registradas para este identificador.',
+    actor: 'actor',
+    correlation: 'correlación',
+    reason: 'motivo',
+    id: 'id',
+  },
+  resilience: {
+    apiUp: '¿Está la API en pie?',
+    dbAwake: '¿Está despierta la base de datos?',
+    asking: 'Preguntando…',
+    connecting: 'Conectando con SQL Server…',
+    apiProcess: 'Proceso de la API',
+    dbConnection: 'Conexión con SQL Server',
+    untested: 'Sin probar',
+    roundTrip: 'Ida y vuelta',
+    httpStatus: 'Estado HTTP',
+    promisesTitle: 'Lo que promete la API (ADR-006)',
+    approved: 'Aprobado',
+    promises: ['Espera hasta 60 s a una base de datos que despierta', 'Responde 503 con Retry-After mientras despierta', 'Una limpieza fallida nunca hace fallar una ejecución', 'Corre sobre 0,00 € de infraestructura'],
+    historyTitle: 'Historial de sondas',
+    samples: '{n} muestras en esta sesión',
+    sample: '1 muestra en esta sesión',
+    time: 'Hora',
+    probe: 'Sonda',
+    status: 'Estado',
+    http: 'HTTP',
+    latency: 'Latencia',
+    liveness: 'Proceso (/health)',
+    readiness: 'SQL listo (/health/ready)',
+  },
+  lifecycle: {
+    states: { draft: 'Borrador', active: 'Activa', cancelled: 'Cancelada' },
+    stateHints: { draft: 'creada, aún sin vigencia', active: 'en vigor', cancelled: 'final, ya no cambia' },
+    activateArrow: 'activar · If-Match',
+    cancelArrow: 'cancelar · If-Match',
+    tokenTitle: 'Esta pestaña envía peticiones reales con tu propio token',
+    tokenBody: 'Un JWT local con organization_id y el rol PolicyOperator. La pestaña Blueprint no necesita ninguno.',
+    configure: 'Configurar JWT',
+    step1: '1 · Crear un borrador',
+    step2: '2 · Activarla',
+    step3: '3 · Cancelarla',
+    policyNumber: 'Número de póliza',
+    insuredAmount: 'Importe asegurado',
+    currency: 'Moneda',
+    createDraft: 'Crear borrador',
+    insuredParty: 'Referencia del asegurado',
+    startDate: 'Fecha de inicio',
+    endDate: 'Fecha de fin',
+    ifMatch: 'If-Match (la versión que leíste)',
+    activate: 'Activar',
+    reason: 'Motivo de cancelación',
+    cancel: 'Cancelar',
+    inspectorTitle: 'La póliza tal y como la ve el servidor',
+    noPolicy: 'Aún no hay póliza.',
+    noPolicyHint: 'El paso 1 crea un borrador.',
+    identifier: 'Identificador',
+    amount: 'Importe asegurado',
+    currentVersion: 'Versión actual (ETag)',
+    storedRowversion: 'rowversion almacenada',
+    insuredPartyLabel: 'Asegurado',
+    coverage: 'Periodo de cobertura',
+    created: 'Creada (UTC)',
+    msgCreated: 'Póliza {n} creada como borrador.',
+    msgActive: 'La póliza ya está activa. El servidor emitió una versión nueva.',
+    msgCancelled: 'Póliza cancelada. El libro de auditoría tiene el registro.',
+    msgStale: '412 Precondition Failed: la versión que enviaste está obsoleta. Vuelve a leer la póliza.',
+  },
 };
 
 export const MESSAGES: Readonly<Record<Locale, Messages>> = Object.freeze({ en, es });

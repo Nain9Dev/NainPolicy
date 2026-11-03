@@ -24,6 +24,8 @@ export interface BlueprintLayout {
   edges: Record<EdgeId, string>;
   /** Reverse path drawn when the concurrency guard rejects a request (Application back to API). */
   rejectEdge: string;
+  /** One continuous route from the browser to SQL Server, followed by the idle pulse (spec 007). */
+  ghostPath: string;
 }
 
 export const NODE_IDS: NodeId[] = ['client', 'api', 'application', 'domain', 'infrastructure', 'sql'];
@@ -59,6 +61,7 @@ const wide: BlueprintLayout = {
     'infrastructure-sql': 'M982 366 L1042 366',
   },
   rejectEdge: 'M522 306 L462 306',
+  ghostPath: 'M202 266 L262 266 L462 266 L522 266 L722 340 C760 340 744 366 782 366 L982 366 L1042 366',
 };
 
 const stacked: BlueprintLayout = {
@@ -81,6 +84,7 @@ const stacked: BlueprintLayout = {
     'infrastructure-sql': 'M292 912 L292 1024',
   },
   rejectEdge: 'M240 496 L240 440',
+  ghostPath: 'M200 168 L200 224 L200 440 L200 496 L292 706 L292 762 L292 912 L292 1024',
 };
 
 export const LAYOUTS: Readonly<Record<LayoutId, BlueprintLayout>> = Object.freeze({ wide, stacked });

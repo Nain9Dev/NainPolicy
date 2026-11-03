@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import SourceChip from '../components/SourceChip.vue';
 import ViewHeader from '../components/ViewHeader.vue';
 import { useLocale } from '../i18n/locale';
+import { format } from '../i18n/messages';
 import { api, ApiError } from '../services/api';
 import type { PolicyTransitionResponse, ScenarioSource } from '../types/contracts';
 
@@ -80,7 +81,7 @@ onMounted(() => {
     <div class="glass-panel info-card">
       <div class="search-bar">
         <div class="search-input-group">
-          <label>Policy identifier (GUID)</label>
+          <label>{{ t.audit.idLabel }}</label>
           <input
             v-model="policyIdInput"
             type="text"
@@ -95,7 +96,7 @@ onMounted(() => {
           :disabled="isLoading || !policyIdInput"
           @click="handleFetchCustom"
         >
-          Read this policy's history
+          {{ t.audit.readHistory }}
         </button>
 
         <button
@@ -105,7 +106,7 @@ onMounted(() => {
           @click="fetchFromDemo"
         >
           <span v-if="isLoading" class="spinner"></span>
-          <span>{{ isLoading ? 'Loading…' : 'Load the demo ledger' }}</span>
+          <span>{{ isLoading ? t.audit.loading : t.audit.loadDemo }}</span>
         </button>
       </div>
     </div>
@@ -119,20 +120,20 @@ onMounted(() => {
     <div class="glass-panel timeline-panel">
       <div class="panel-header">
         <div>
-          <h3>Transitions, oldest first</h3>
-          <span class="sub-hint">{{ transitions.length }} recorded state changes</span>
+          <h3>{{ t.audit.listTitle }}</h3>
+          <span class="sub-hint">{{ format(t.audit.listHint, { n: transitions.length }) }}</span>
         </div>
         <SourceChip v-if="source" :source="source" />
       </div>
 
       <div v-if="transitions.length === 0 && !isLoading" class="empty-timeline">
-        <p>No transitions recorded for this identifier.</p>
+        <p>{{ t.audit.empty }}</p>
       </div>
 
       <div v-else class="timeline-container">
         <div
-          v-for="(t, idx) in transitions"
-          :key="t.id"
+          v-for="(tr, idx) in transitions"
+          :key="tr.id"
           class="timeline-item"
         >
           <div class="timeline-marker">
@@ -143,37 +144,37 @@ onMounted(() => {
           <div class="timeline-content glass-panel">
             <div class="timeline-top">
               <div class="transition-pill-wrap">
-                <span class="badge badge-slate font-mono">{{ t.fromStatus }}</span>
+                <span class="badge badge-slate font-mono">{{ tr.fromStatus }}</span>
                 <span class="arrow-symbol">→</span>
                 <span
                   :class="[
                     'badge',
-                    t.toStatus === 'Active' ? 'badge-emerald' : t.toStatus === 'Cancelled' ? 'badge-rose' : 'badge-cyan'
+                    tr.toStatus === 'Active' ? 'badge-emerald' : tr.toStatus === 'Cancelled' ? 'badge-rose' : 'badge-cyan'
                   ]"
                 >
-                  {{ t.toStatus }}
+                  {{ tr.toStatus }}
                 </span>
               </div>
 
-              <span class="timestamp font-mono">{{ t.occurredAtUtc }}</span>
+              <span class="timestamp font-mono">{{ tr.occurredAtUtc }}</span>
             </div>
 
             <div class="timeline-grid">
               <div class="meta-field">
-                <span class="field-label">actor</span>
-                <span class="field-value font-mono">{{ t.actorSubject }}</span>
+                <span class="field-label">{{ t.audit.actor }}</span>
+                <span class="field-value font-mono">{{ tr.actorSubject }}</span>
               </div>
               <div class="meta-field">
-                <span class="field-label">correlation</span>
-                <span class="field-value font-mono">{{ t.correlationId }}</span>
+                <span class="field-label">{{ t.audit.correlation }}</span>
+                <span class="field-value font-mono">{{ tr.correlationId }}</span>
               </div>
-              <div v-if="t.reason" class="meta-field full-width">
-                <span class="field-label">reason</span>
-                <span class="field-value text-highlight">{{ t.reason }}</span>
+              <div v-if="tr.reason" class="meta-field full-width">
+                <span class="field-label">{{ t.audit.reason }}</span>
+                <span class="field-value text-highlight">{{ tr.reason }}</span>
               </div>
               <div class="meta-field full-width">
-                <span class="field-label">id</span>
-                <span class="field-value font-mono text-dim">{{ t.id }}</span>
+                <span class="field-label">{{ t.audit.id }}</span>
+                <span class="field-value font-mono text-dim">{{ tr.id }}</span>
               </div>
             </div>
           </div>
