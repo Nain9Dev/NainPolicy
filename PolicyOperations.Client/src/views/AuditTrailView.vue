@@ -6,12 +6,28 @@ import ViewHeader from '../components/ViewHeader.vue';
 import type { TabId } from '../architecture/tabRoute';
 import { useLocale } from '../i18n/locale';
 import { format } from '../i18n/messages';
+import { historySummary, transitionSentence } from '../architecture/historyText';
 import { api, ApiError } from '../services/api';
 import { lastPolicy, lastRun, rememberRun } from '../services/session';
 import type { PolicyTransitionResponse, ScenarioSource } from '../types/contracts';
 
 const emit = defineEmits<{ (e: 'navigate', tab: TabId): void }>();
-const { t } = useLocale();
+const { locale, t } = useLocale();
+const copied = ref(false);
+let copiedTimer: number | null = null;
+
+async function copyHistory() {
+  const label = lastPolicy.value?.id === policyIdInput.value ? lastPolicy.value.policyNumber : lastRun.value?.response.policy.policyNumber ?? policyIdInput.value;
+  const text = historySummary(transitions.value, label, source.value ?? 'simulated', locale.value);
+  try {
+    await navigator.clipboard.writeText(text);
+    copied.value = true;
+    if (copiedTimer !== null) window.clearTimeout(copiedTimer);
+    copiedTimer = window.setTimeout(() => (copied.value = false), 2000);
+  } catch {
+    // Clipboard blocked: the list on screen remains the evidence.
+  }
+}
 
 const props = defineProps<{
   token: string;
@@ -137,7 +153,10 @@ onMounted(() => {
           <h3>{{ listTitle }}</h3>
           <span class="sub-hint">{{ format(t.audit.listHint, { n: transitions.length }) }}</span>
         </div>
-        <SourceChip v-if="source" :source="source" />
+        <div class="panel-actions">
+          <SourceChip v-if="source" :source="source" />
+          <button v-if="transitions.length" type="button" class="btn btn-secondary small" @click="copyHistory">{{ copied ? t.history.copied : t.history.copy }}</button>
+        </div>
       </div>
 
       <div v-if="transitions.length === 0 && !isLoading" class="empty-timeline">
@@ -156,6 +175,7 @@ onMounted(() => {
           </div>
 
           <div class="timeline-content glass-panel">
+            <p class="plain-sentence">{{ transitionSentence(tr, locale) }}</p>
             <div class="timeline-top">
               <div class="transition-pill-wrap">
                 <span class="badge badge-slate font-mono">{{ tr.fromStatus }}</span>
@@ -200,6 +220,27 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.btn.small {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.74rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}
+
+.plain-sentence {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #ffffff;
+  margin: 0 0 0.75rem;
+}
+
 .audit-view {
   display: flex;
   flex-direction: column;

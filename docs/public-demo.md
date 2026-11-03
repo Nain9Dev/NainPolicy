@@ -156,6 +156,14 @@ Production after zip deploy:
 The residual slowness is the Azure SQL free-tier resume after idle (about 1 to 2 minutes), which
 the offer does not allow removing. The page probes readiness and retries (ADR-006).
 
+## The history in plain words, 2026-11-03
+
+Spec 012. Observed with Playwright and Chromium in `es-ES` with the `Europe/Madrid` time zone after
+a run: each transition opens with a sentence such as `El 3 nov 2026, 21:14, public-demo activó la
+póliza (borrador → activa). Motivo: Public demo activation.`; `Copiar historial` puts the policy,
+`Simulada · en el navegador`, and two numbered sentences with their request identifiers on the
+clipboard.
+
 ## Narration on phones, 2026-11-03
 
 Spec 006 `REQ-162`. Observed with Playwright and Chromium in `es-ES` at 390 px: after a run, a
