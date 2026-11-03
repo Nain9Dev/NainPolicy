@@ -1,6 +1,6 @@
 # Traceability
 
-- Document version: 0.5
+- Document version: 0.6
 - Status: Active
 - Date: 2026-11-03
 - Scope: Approved rule identifier to the test that demonstrates it
@@ -164,6 +164,7 @@ Suite `C` — `PolicyOperations.Client` Vitest (`npm test`, no browser).
 | `REQ-113` client contract matches the API shape | C | `labels a 200 from the configured API as live and passes the response through unchanged` (typed against `PublicDemoRunResponse`; `vue-tsc` enforces the shape) |
 | `REQ-101` `REQ-105` `REQ-120` `REQ-121` `REQ-123` | — | Browser walkthrough recorded in `docs/public-demo.md` (2026-10-22) |
 | `REQ-122` reduced motion | — | Emulated in a browser on 2026-11-03 (spec 006 walkthrough): no packets, no flow, trace lands on the last step |
+| `REQ-123` accessible name and description, keyboard reach, WCAG 2.2 AA contrast | — | `npm run audit:a11y` (axe-core 4.14, WCAG 2.x A/AA and best practices): 0 violations on the five tabs on 2026-11-03; keyboard: `Enter` and `Space` on a focused layer box select it, `Escape` clears |
 
 ## Client walkthrough (spec 006, ADR-008 proposed)
 
