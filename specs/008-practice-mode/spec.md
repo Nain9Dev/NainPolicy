@@ -55,10 +55,16 @@ Notation: EARS ("When X, the system shall Y").
   action that sends the previous ETag and shows the resulting `412` with its explanation.
 - `REQ-196` When the Audit tab reads a policy's history with a token, the origin chip shall follow
   the real origin of the answer.
+- `REQ-197` When the visitor opens the Audit tab after driving a policy or running the scenario in
+  the same page session, the tab shall show that policy's history first, named as such, without a
+  new scenario run; the last run's ledger is shown from the answer already received.
+- `REQ-198` When the Audit tab opens with nothing to show, it shall explain what to do and shall
+  not run the demo on its own; the demo runs only on the visitor's click.
 
 ## Acceptance evidence
 
 | Requirement | Evidence |
 |---|---|
 | `REQ-190` `REQ-191` `REQ-192` `REQ-193` | Vitest: `policyOps.test.ts` |
-| `REQ-194` `REQ-195` `REQ-196` | Browser walkthrough recorded in `docs/public-demo.md` |
+| `REQ-197` (store) | Vitest: `session.test.ts` |
+| `REQ-194` `REQ-195` `REQ-196` `REQ-197` `REQ-198` | Browser walkthrough recorded in `docs/public-demo.md` |
