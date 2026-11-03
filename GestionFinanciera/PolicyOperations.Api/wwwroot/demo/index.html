@@ -35,13 +35,15 @@
         <p class="eyebrow">Demo backend &middot; .NET 10 &middot; EF Core &middot; SQL Server</p>
         <h1>Ejecuta un ciclo completo de póliza</h1>
         <p class="summary">
-          Una ejecución crea una póliza sintética, la activa, demuestra el rechazo de una escritura
-          con versión obsoleta, la cancela y recupera su historial de auditoría. No es una
-          simulación en el navegador: cada paso es una operación real contra SQL Server.
+          Una ejecución crea una póliza sintética, la activa, demuestra que una escritura con
+          versión antigua se rechaza en vez de pisar el trabajo de otro, la cancela y recupera su
+          historial de auditoría. No es una simulación en el navegador: cada paso es una operación
+          real contra SQL Server. Para verlo explicado capa a capa, abre el recorrido guiado.
         </p>
 
         <div class="actions">
           <button id="run-demo" type="button" disabled>Comprobando backend…</button>
+          <a class="guided" href="https://policy.naindev.com/" target="_blank" rel="noopener noreferrer">Recorrido guiado paso a paso &#8599;</a>
           <a href="/swagger" target="_blank" rel="noopener noreferrer">Ver todos los endpoints &#8599;</a>
           <a href="https://github.com/Nain9Dev/API-Gestion-Financiera" target="_blank" rel="noopener noreferrer">Revisar código &#8599;</a>
           <a href="https://www.naindev.com/servicios/sistemas-criticos-dotnet" target="_blank" rel="noopener noreferrer">Servicio relacionado &#8599;</a>
@@ -71,7 +73,7 @@
           <li data-state="pending">
             <span class="step-index">01</span>
             <span class="step-body">
-              <strong>Crear Draft</strong>
+              <strong>Se crea una póliza nueva (borrador)</strong>
               <code class="step-route">POST /api/v1/policies</code>
             </span>
             <span class="step-evidence">Pendiente</span>
@@ -79,7 +81,7 @@
           <li data-state="pending">
             <span class="step-index">02</span>
             <span class="step-body">
-              <strong>Activar póliza</strong>
+              <strong>El borrador pasa a activo</strong>
               <code class="step-route">POST /api/v1/policies/{id}/activate</code>
             </span>
             <span class="step-evidence">Pendiente</span>
@@ -87,7 +89,7 @@
           <li data-state="pending">
             <span class="step-index">03</span>
             <span class="step-body">
-              <strong>Rechazar ETag obsoleto</strong>
+              <strong>Se bloquea una escritura con versión antigua (412)</strong>
               <code class="step-route">POST /api/v1/policies/{id}/cancel</code>
             </span>
             <span class="step-evidence">Pendiente</span>
@@ -95,7 +97,7 @@
           <li data-state="pending">
             <span class="step-index">04</span>
             <span class="step-body">
-              <strong>Cancelar póliza</strong>
+              <strong>La póliza se cancela</strong>
               <code class="step-route">POST /api/v1/policies/{id}/cancel</code>
             </span>
             <span class="step-evidence">Pendiente</span>
@@ -103,7 +105,7 @@
           <li data-state="pending">
             <span class="step-index">05</span>
             <span class="step-body">
-              <strong>Leer auditoría</strong>
+              <strong>Se lee el historial de auditoría</strong>
               <code class="step-route">GET /api/v1/policies/{id}/transitions</code>
             </span>
             <span class="step-evidence">Pendiente</span>
