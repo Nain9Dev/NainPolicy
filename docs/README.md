@@ -1,6 +1,6 @@
 # Documentation map
 
-- Document version: 0.15
+- Document version: 0.16
 - Status: Active
 - Date: 2026-11-03
 - Owner: Aitor Nain Mendoza Vallejo
@@ -65,6 +65,7 @@ If two approved sources conflict and neither has precedence, the affected work s
 | `specs/010-journey/` | Plain-language tab names, next-step band on every tab, closing card of the practice flow, delivery line | 0.1 | Proposed | None |
 | `specs/011-honest-health/` | Health probes report what the API said or that it was unreachable; backend stage in plain language | 0.1 | Proposed | None |
 | `specs/012-history-in-plain-words/` | One plain sentence per transition; copyable history | 0.1 | Proposed | None |
+| `specs/013-human-values/` | Money and dates in the page locale in the practice inspector | 0.1 | Proposed | None |
 | `AGENTS.md` | Canonical constitution for agents and contributors | 0.1 | Active | None |
 | `SECURITY.md` | Vulnerability reporting and security posture | 0.1 | Active | None |
 

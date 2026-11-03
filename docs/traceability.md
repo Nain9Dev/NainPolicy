@@ -1,6 +1,6 @@
 # Traceability
 
-- Document version: 0.9
+- Document version: 0.10
 - Status: Active
 - Date: 2026-11-03
 - Scope: Approved rule identifier to the test that demonstrates it
@@ -239,6 +239,14 @@ Suite `C` — `PolicyOperations.Client` Vitest (`npm test`, no browser).
 |---|---|---|
 | `REQ-240` one plain sentence per transition, state names from the catalogue | C | `says who did what and when, in plain English, with the reason when there is one`, `says it in Spanish with the state names a reader knows`, `never prints the raw status words of the API` |
 | `REQ-241` `REQ-242` copyable history, empty case | C | `lists one numbered sentence per transition with the policy and the origin`, `says so when there is nothing recorded`; browser: clipboard read back |
+
+## Money and dates (spec 013 proposed)
+
+| Requirement | Suite | Test |
+|---|---|---|
+| `REQ-250` money in the locale | C | `writes a money amount the way a reader of each locale expects` |
+| `REQ-251` dates in the locale | C | `writes a calendar date without a time, in the locale`; `formatMoment` covered by `transitionSentence` tests |
+| `REQ-252` unformattable values shown as they came | C | `keeps an unknown currency code visible instead of failing`, `leaves an unparsable value as it came` |
 | `REQ-158` reduced motion: no flow, no auto walkthrough, stepping works | — | Browser walkthrough with `prefers-reduced-motion: reduce` emulated (2026-11-03) |
 
 ## Known gaps
