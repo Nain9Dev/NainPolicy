@@ -1,6 +1,6 @@
 # Traceability
 
-- Document version: 0.4
+- Document version: 0.5
 - Status: Active
 - Date: 2026-11-03
 - Scope: Approved rule identifier to the test that demonstrates it
@@ -200,6 +200,17 @@ Suite `C` — `PolicyOperations.Client` Vitest (`npm test`, no browser).
 | `REQ-182` idle pulse along the request route; none under reduced motion | C | `runs the idle pulse from the browser to SQL Server`; browser: `.ghost` present when idle |
 | `REQ-183` hero proof reflects the database probe | — | Browser: `state-unavailable` with its title after pointer intent without a backend |
 | `REQ-184` client tests and build in CI | — | `.github/workflows/ci.yml` job `client-tests` |
+
+## Practice mode (spec 008 proposed)
+
+| Requirement | Suite | Test |
+|---|---|---|
+| `REQ-190` no token: in-browser engine, no API contact, labelled simulated | C | `answers from the in-browser engine without contacting the API when there is no token`, `refuses a stale version in the in-browser engine with a 412 Problem Details` |
+| `REQ-191` token and 2xx: API body and ETag labelled live | C | `returns the API body and ETag labelled live on a 2xx with a token` |
+| `REQ-192` token and non-2xx: thrown with Problem Details, never a fallback | C | `surfaces a non-2xx answer from the API as an error with its Problem Details and never falls back` |
+| `REQ-193` token and network failure: simulated | C | `answers from the in-browser engine labelled simulated when the network fails with a token` |
+| `REQ-194` `REQ-195` Lifecycle usable without a token; stale-write action | — | Browser walkthrough recorded in `docs/public-demo.md` (2026-11-03) |
+| `REQ-196` Audit origin follows the answer | C | `labels a live transition list by its origin`; browser: simulated chip after a token-less read |
 | `REQ-158` reduced motion: no flow, no auto walkthrough, stepping works | — | Browser walkthrough with `prefers-reduced-motion: reduce` emulated (2026-11-03) |
 
 ## Known gaps

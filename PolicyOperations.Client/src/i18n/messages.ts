@@ -209,6 +209,14 @@ export interface Messages {
     msgActive: string;
     msgCancelled: string;
     msgStale: string;
+    practiceEyebrow: string;
+    practiceLede: string;
+    tokenOption: string;
+    tryStale: string;
+    tryStaleHint: string;
+    staleExplained: string;
+    lastAnswer: string;
+    status: string;
   };
 }
 
@@ -511,6 +519,14 @@ const en: Messages = {
     msgActive: 'Policy is now active. The server issued a new version.',
     msgCancelled: 'Policy cancelled. The audit ledger has the record.',
     msgStale: '412 Precondition Failed: the version you sent is stale. Read the policy again.',
+    practiceEyebrow: 'Try it · no sign-up',
+    practiceLede: 'Without a token everything happens in your browser and is labelled Simulated. With a local token the same actions go to the real API and you see its real answers.',
+    tokenOption: 'I have a local token',
+    tryStale: 'Try with the old version',
+    tryStaleHint: 'Acts like a colleague who read the policy before your last change and saves now.',
+    staleExplained: 'The server compared the old version with the stored one and refused the change with 412. The policy did not change.',
+    lastAnswer: 'Last answer',
+    status: 'Status',
   },
 };
 
@@ -808,6 +824,14 @@ const es: Messages = {
     msgActive: 'La póliza ya está activa. El servidor emitió una versión nueva.',
     msgCancelled: 'Póliza cancelada. El libro de auditoría tiene el registro.',
     msgStale: '412 Precondition Failed: la versión que enviaste está obsoleta. Vuelve a leer la póliza.',
+    practiceEyebrow: 'Pruébalo · sin registro',
+    practiceLede: 'Sin token, todo ocurre en tu navegador y se etiqueta como simulado. Con un token local, las mismas acciones van a la API real y ves sus respuestas reales.',
+    tokenOption: 'Tengo un token local',
+    tryStale: 'Probar con la versión antigua',
+    tryStaleHint: 'Actúa como un compañero que leyó la póliza antes de tu último cambio y guarda ahora.',
+    staleExplained: 'El servidor comparó la versión antigua con la almacenada y rechazó el cambio con 412. La póliza no cambió.',
+    lastAnswer: 'Última respuesta',
+    status: 'Estado',
   },
 };
 

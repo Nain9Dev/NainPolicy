@@ -7,6 +7,23 @@
 Relevant behavioural changes, newest first. Dates are the date the change was made, not released.
 A change is listed only when it alters behaviour, contracts, evidence or operating boundaries.
 
+## 0.17 — 2026-11-03 — Practice mode: the workbench works without a token
+
+Governing spec: 008 (`Proposed`). Client only; no API change.
+
+- The Lifecycle tab is usable by anyone: without a token every action answers from the in-browser
+  engine and is labelled `Simulated`; with a local token the same actions go to the real API and
+  its real answers are shown, including refusals. A one-click "try with the old version" action
+  provokes the `412` and explains it; the inspector shows the last HTTP answer.
+- Defect fixed: with a token, a non-`2xx` answer from the real API (`412`, `409`, `400`) was
+  swallowed and the in-browser engine answered instead. Every authorized operation now follows one
+  origin rule (`operate` in `services/api.ts`): no token → simulated; `2xx` → live; other status →
+  thrown as `ApiError` with the Problem Details; network failure → simulated.
+- The Audit tab reads a policy's history without a token and labels the origin from the answer.
+- The in-browser engine returns copies of its state, so a view never mutates it by reference.
+- Lifecycle inputs carry explicit labels.
+- 6 new client tests (105 in total).
+
 ## 0.16 — 2026-11-03 — Commercial layer and bilingual client
 
 Governing spec: 007 (`Proposed`); ADR-009 (`Proposed`). Client only; no API, contract or cost change.

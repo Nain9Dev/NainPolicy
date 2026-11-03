@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue';
+import SourceChip from '../components/SourceChip.vue';
 import ViewHeader from '../components/ViewHeader.vue';
 import { useLocale } from '../i18n/locale';
 import { format } from '../i18n/messages';
-import { api, ApiError } from '../services/api';
-import type { PolicyResponse } from '../types/contracts';
+import { api, ApiError, type PolicyResult } from '../services/api';
+import type { PolicyResponse, ScenarioSource } from '../types/contracts';
 
 const { t } = useLocale();
 
@@ -16,9 +17,13 @@ const emit = defineEmits<{
   (e: 'openTokenModal'): void;
 }>();
 
-// Active policy state in workbench
+// The policy being driven and what the server last said about it.
 const currentPolicy = ref<PolicyResponse | null>(null);
 const currentEtag = ref<string | null>(null);
+/** The version before the last accepted change; what a colleague who read earlier would still hold. */
+const previousEtag = ref<string | null>(null);
+const source = ref<ScenarioSource | null>(null);
+const lastStatus = ref<number | null>(null);
 const isLoading = ref(false);
 const errorFeedback = ref<string | null>(null);
 const successFeedback = ref<string | null>(null);
@@ -45,46 +50,65 @@ const cancelForm = ref({
 const isDraft = computed(() => currentPolicy.value?.status === 'Draft');
 const isActive = computed(() => currentPolicy.value?.status === 'Active');
 const isCancelled = computed(() => currentPolicy.value?.status === 'Cancelled');
+const hasToken = computed(() => props.token.trim().length > 0);
+
+const header = computed(() => ({
+  eyebrow: hasToken.value ? t.value.views.lifecycle.eyebrow : t.value.lifecycle.practiceEyebrow,
+  title: t.value.views.lifecycle.title,
+  lede: hasToken.value ? t.value.views.lifecycle.lede : t.value.lifecycle.practiceLede,
+}));
 
 function resetMessages() {
   errorFeedback.value = null;
   successFeedback.value = null;
 }
 
-async function handleCreatePolicy() {
-  if (!props.token) {
-    emit('openTokenModal');
-    return;
-  }
+function accept(result: PolicyResult, status: number, message: string) {
+  previousEtag.value = currentEtag.value;
+  currentPolicy.value = result.policy;
+  currentEtag.value = result.etag;
+  source.value = result.source;
+  lastStatus.value = status;
+  activateForm.value.ifMatch = result.etag || '';
+  cancelForm.value.ifMatch = result.etag || '';
+  successFeedback.value = message;
+}
 
+function refuse(err: unknown) {
+  if (err instanceof ApiError) {
+    lastStatus.value = err.status;
+    errorFeedback.value = err.status === 412 ? t.value.lifecycle.msgStale : err.problem?.detail || err.message;
+  } else {
+    errorFeedback.value = String(err);
+  }
+}
+
+async function run(action: () => Promise<void>) {
   resetMessages();
   isLoading.value = true;
   try {
-    const res = await api.createPolicy(createForm.value, props.token);
-    currentPolicy.value = res.policy;
-    currentEtag.value = res.etag;
-    activateForm.value.ifMatch = res.etag || '';
-    cancelForm.value.ifMatch = res.etag || '';
-    successFeedback.value = format(t.value.lifecycle.msgCreated, { n: res.policy.policyNumber });
+    await action();
   } catch (err: unknown) {
-    if (err instanceof ApiError) {
-      errorFeedback.value = err.problem?.detail || err.message;
-    } else {
-      errorFeedback.value = String(err);
-    }
+    refuse(err);
   } finally {
     isLoading.value = false;
   }
 }
 
-async function handleActivatePolicy() {
-  if (!currentPolicy.value || !props.token) return;
+function handleCreatePolicy() {
+  return run(async () => {
+    const res = await api.createPolicy(createForm.value, props.token);
+    previousEtag.value = null;
+    accept(res, 201, format(t.value.lifecycle.msgCreated, { n: res.policy.policyNumber }));
+    previousEtag.value = null;
+  });
+}
 
-  resetMessages();
-  isLoading.value = true;
-  try {
+function handleActivatePolicy() {
+  if (!currentPolicy.value) return;
+  return run(async () => {
     const res = await api.activatePolicy(
-      currentPolicy.value.id,
+      currentPolicy.value!.id,
       {
         insuredPartyReference: activateForm.value.insuredPartyReference,
         coverageStartDate: activateForm.value.coverageStartDate,
@@ -93,59 +117,47 @@ async function handleActivatePolicy() {
       activateForm.value.ifMatch || currentEtag.value || '',
       props.token
     );
-    currentPolicy.value = res.policy;
-    currentEtag.value = res.etag;
-    cancelForm.value.ifMatch = res.etag || '';
-    successFeedback.value = t.value.lifecycle.msgActive;
-  } catch (err: unknown) {
-    if (err instanceof ApiError) {
-      if (err.status === 412) {
-        errorFeedback.value = t.value.lifecycle.msgStale;
-      } else {
-        errorFeedback.value = err.problem?.detail || err.message;
-      }
-    } else {
-      errorFeedback.value = String(err);
-    }
-  } finally {
-    isLoading.value = false;
-  }
+    accept(res, 200, t.value.lifecycle.msgActive);
+  });
 }
 
-async function handleCancelPolicy() {
-  if (!currentPolicy.value || !props.token) return;
-
-  resetMessages();
-  isLoading.value = true;
-  try {
+function handleCancelPolicy() {
+  if (!currentPolicy.value) return;
+  return run(async () => {
     const res = await api.cancelPolicy(
-      currentPolicy.value.id,
+      currentPolicy.value!.id,
       { reason: cancelForm.value.reason },
       cancelForm.value.ifMatch || currentEtag.value || '',
       props.token
     );
-    currentPolicy.value = res.policy;
-    currentEtag.value = res.etag;
-    successFeedback.value = t.value.lifecycle.msgCancelled;
-  } catch (err: unknown) {
-    if (err instanceof ApiError) {
-      if (err.status === 412) {
-        errorFeedback.value = t.value.lifecycle.msgStale;
-      } else {
-        errorFeedback.value = err.problem?.detail || err.message;
+    accept(res, 200, t.value.lifecycle.msgCancelled);
+  });
+}
+
+/** Sends the version a slower colleague would still hold; the guard must answer 412 (REQ-195). */
+function handleStaleAttempt() {
+  if (!currentPolicy.value || !previousEtag.value) return;
+  return run(async () => {
+    try {
+      await api.cancelPolicy(currentPolicy.value!.id, { reason: cancelForm.value.reason }, previousEtag.value!, props.token);
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.status === 412) {
+        lastStatus.value = 412;
+        errorFeedback.value = t.value.lifecycle.staleExplained;
+        return;
       }
-    } else {
-      errorFeedback.value = String(err);
+      throw err;
     }
-  } finally {
-    isLoading.value = false;
-  }
+  });
 }
 </script>
 
 <template>
   <div class="lifecycle-view">
-    <ViewHeader :eyebrow="t.views.lifecycle.eyebrow" :title="t.views.lifecycle.title" :lede="t.views.lifecycle.lede" />
+    <ViewHeader :eyebrow="header.eyebrow" :title="header.title" :lede="header.lede">
+      <SourceChip v-if="source" :source="source" />
+      <button v-if="!hasToken" type="button" class="btn btn-secondary" @click="emit('openTokenModal')">{{ t.lifecycle.tokenOption }}</button>
+    </ViewHeader>
 
     <!-- State machine -->
     <div class="glass-panel state-machine-panel">
@@ -186,23 +198,6 @@ async function handleCancelPolicy() {
       </div>
     </div>
 
-    <!-- Token Missing Banner -->
-    <div v-if="!token" class="glass-panel token-notice">
-      <div class="notice-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-        </svg>
-      </div>
-      <div class="notice-body">
-        <h4>{{ t.lifecycle.tokenTitle }}</h4>
-        <p>{{ t.lifecycle.tokenBody }}</p>
-        <button type="button" class="btn btn-primary config-btn" @click="emit('openTokenModal')">
-          {{ t.lifecycle.configure }}
-        </button>
-      </div>
-    </div>
-
     <!-- Feedback messages -->
     <div v-if="errorFeedback" class="glass-panel feedback-error">
       {{ errorFeedback }}
@@ -219,18 +214,18 @@ async function handleCancelPolicy() {
         <div class="glass-panel form-card">
           <h4>{{ t.lifecycle.step1 }}</h4>
           <div class="form-group">
-            <label>{{ t.lifecycle.policyNumber }}</label>
-            <input v-model="createForm.policyNumber" type="text" class="input-field" placeholder="SYNTH-POL-XXXX" />
+            <label for="lc-number">{{ t.lifecycle.policyNumber }}</label>
+            <input id="lc-number" v-model="createForm.policyNumber" type="text" class="input-field" placeholder="SYNTH-POL-XXXX" />
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label>{{ t.lifecycle.insuredAmount }}</label>
-              <input v-model.number="createForm.insuredAmount" type="number" class="input-field" />
+              <label for="lc-amount">{{ t.lifecycle.insuredAmount }}</label>
+              <input id="lc-amount" v-model.number="createForm.insuredAmount" type="number" class="input-field" />
             </div>
             <div class="form-group">
-              <label>{{ t.lifecycle.currency }}</label>
-              <select v-model="createForm.currency" class="input-field">
+              <label for="lc-currency">{{ t.lifecycle.currency }}</label>
+              <select id="lc-currency" v-model="createForm.currency" class="input-field">
                 <option value="EUR">EUR (€)</option>
                 <option value="USD">USD ($)</option>
                 <option value="GBP">GBP (£)</option>
@@ -241,7 +236,7 @@ async function handleCancelPolicy() {
           <button
             type="button"
             class="btn btn-primary full-btn"
-            :disabled="isLoading || !token"
+            :disabled="isLoading"
             @click="handleCreatePolicy"
           >
             {{ t.lifecycle.createDraft }}
@@ -252,30 +247,30 @@ async function handleCancelPolicy() {
         <div class="glass-panel form-card" :class="{ disabled: !isDraft }">
           <h4>{{ t.lifecycle.step2 }}</h4>
           <div class="form-group">
-            <label>{{ t.lifecycle.insuredParty }}</label>
-            <input v-model="activateForm.insuredPartyReference" type="text" class="input-field" :disabled="!isDraft" />
+            <label for="lc-party">{{ t.lifecycle.insuredParty }}</label>
+            <input id="lc-party" v-model="activateForm.insuredPartyReference" type="text" class="input-field" :disabled="!isDraft" />
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label>{{ t.lifecycle.startDate }}</label>
-              <input v-model="activateForm.coverageStartDate" type="date" class="input-field" :disabled="!isDraft" />
+              <label for="lc-start">{{ t.lifecycle.startDate }}</label>
+              <input id="lc-start" v-model="activateForm.coverageStartDate" type="date" class="input-field" :disabled="!isDraft" />
             </div>
             <div class="form-group">
-              <label>{{ t.lifecycle.endDate }}</label>
-              <input v-model="activateForm.coverageEndDate" type="date" class="input-field" :disabled="!isDraft" />
+              <label for="lc-end">{{ t.lifecycle.endDate }}</label>
+              <input id="lc-end" v-model="activateForm.coverageEndDate" type="date" class="input-field" :disabled="!isDraft" />
             </div>
           </div>
 
           <div class="form-group">
-            <label>{{ t.lifecycle.ifMatch }}</label>
-            <input v-model="activateForm.ifMatch" type="text" class="input-field font-mono" :disabled="!isDraft" />
+            <label for="lc-activate-match">{{ t.lifecycle.ifMatch }}</label>
+            <input id="lc-activate-match" v-model="activateForm.ifMatch" type="text" class="input-field font-mono" :disabled="!isDraft" />
           </div>
 
           <button
             type="button"
             class="btn btn-indigo full-btn"
-            :disabled="isLoading || !isDraft || !token"
+            :disabled="isLoading || !isDraft"
             @click="handleActivatePolicy"
           >
             {{ t.lifecycle.activate }}
@@ -286,22 +281,32 @@ async function handleCancelPolicy() {
         <div class="glass-panel form-card" :class="{ disabled: !isActive }">
           <h4>{{ t.lifecycle.step3 }}</h4>
           <div class="form-group">
-            <label>{{ t.lifecycle.reason }}</label>
-            <input v-model="cancelForm.reason" type="text" class="input-field" :disabled="!isActive" />
+            <label for="lc-reason">{{ t.lifecycle.reason }}</label>
+            <input id="lc-reason" v-model="cancelForm.reason" type="text" class="input-field" :disabled="!isActive" />
           </div>
 
           <div class="form-group">
-            <label>{{ t.lifecycle.ifMatch }}</label>
-            <input v-model="cancelForm.ifMatch" type="text" class="input-field font-mono" :disabled="!isActive" />
+            <label for="lc-cancel-match">{{ t.lifecycle.ifMatch }}</label>
+            <input id="lc-cancel-match" v-model="cancelForm.ifMatch" type="text" class="input-field font-mono" :disabled="!isActive" />
           </div>
 
           <button
             type="button"
             class="btn btn-danger full-btn"
-            :disabled="isLoading || !isActive || !token"
+            :disabled="isLoading || !isActive"
             @click="handleCancelPolicy"
           >
             {{ t.lifecycle.cancel }}
+          </button>
+        </div>
+
+        <!-- Stale write, on purpose -->
+        <div class="glass-panel form-card stale-card" :class="{ disabled: !isActive || !previousEtag }">
+          <h4>{{ t.lifecycle.tryStale }}</h4>
+          <p class="stale-hint">{{ t.lifecycle.tryStaleHint }}</p>
+          <div v-if="previousEtag" class="font-mono stale-version">If-Match: {{ previousEtag }}</div>
+          <button type="button" class="btn btn-danger full-btn" :disabled="isLoading || !isActive || !previousEtag" @click="handleStaleAttempt">
+            {{ t.lifecycle.tryStale }}
           </button>
         </div>
       </div>
@@ -311,6 +316,7 @@ async function handleCancelPolicy() {
         <div class="glass-panel inspector-card">
           <div class="panel-header">
             <h3>{{ t.lifecycle.inspectorTitle }}</h3>
+            <span v-if="lastStatus" :class="['badge', 'font-mono', lastStatus < 400 ? 'badge-emerald' : 'badge-rose']">{{ t.lifecycle.lastAnswer }} · {{ lastStatus }}</span>
             <span v-if="currentPolicy" :class="['badge', isDraft ? 'badge-amber' : isActive ? 'badge-emerald' : 'badge-rose']">
               {{ currentPolicy.status }}
             </span>
@@ -376,6 +382,8 @@ async function handleCancelPolicy() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
   margin-bottom: 1.25rem;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
@@ -455,6 +463,28 @@ async function handleCancelPolicy() {
   font-size: 0.72rem;
   font-family: var(--font-mono);
   color: var(--text-muted);
+}
+
+.inspector-card .badge {
+  white-space: nowrap;
+}
+
+.stale-card {
+  border-color: rgba(255, 0, 31, 0.35);
+}
+
+.stale-hint {
+  font-size: 0.86rem;
+  color: #cbd5e1;
+  line-height: 1.45;
+  margin-bottom: 0.75rem;
+}
+
+.stale-version {
+  font-size: 0.78rem;
+  color: #ff7a8a;
+  margin-bottom: 0.75rem;
+  word-break: break-all;
 }
 
 .token-notice {
