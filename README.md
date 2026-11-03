@@ -22,6 +22,23 @@ El objetivo no es aparentar un SaaS terminado, sino demostrar con código limpio
 
 > Estado: **demo técnica pública y verificada con datos sintéticos**. Puede probarse por HTTPS sin instalar nada en [https://policy.naindev.com](https://policy.naindev.com) o en local mediante la suite interactiva `PolicyOperations.Client` (puerto 5375). No está autorizada para clientes ni datos personales reales.
 
+## Para quién es y qué resuelve
+
+Para una correduría o un equipo de operaciones de seguros, tres cosas se rompen cuando varias
+personas tocan la misma póliza:
+
+| Situación | Lo que hace este sistema |
+|---|---|
+| Dos personas editan la misma póliza a la vez | La segunda recibe un `412` y no se pierde nada: cada cambio lleva la versión que se leyó |
+| «¿Quién cambió esta póliza y por qué?» | Un libro de transiciones solo de escritura, con actor, hora, motivo e identificador de petición |
+| Los datos de una correduría nunca deben mezclarse con otra | La organización sale del token, no de la petición; lo que no es tuyo responde `404` |
+
+En [policy.naindev.com](https://policy.naindev.com) se ve en cinco pasos, en español o inglés
+según el navegador: **Cómo funciona** (el blueprint narrado), **Pruébalo** (conduce una póliza sin
+token, en tu navegador; con un token local, contra la API real), **Dos a la vez** (la carrera que
+termina en `412`), **Historial** (lo que quedó registrado) y **Fallos controlados** (qué pasa
+cuando la base de datos gratuita duerme). Cada resultado dice si es `Live` o `Simulated`.
+
 ## Qué se puede comprobar en 60 segundos
 
 | Quiero… | Dónde |
@@ -29,6 +46,8 @@ El objetivo no es aparentar un SaaS terminado, sino demostrar con código limpio
 | Ver la arquitectura en vivo (Vue 3) | [https://policy.naindev.com](https://policy.naindev.com), en español o inglés según el navegador: qué protege, un blueprint que recorre cada paso real por las capas con narración en lenguaje llano, el `412` del guard de concurrencia y el ledger append-only. Se puede pausar, avanzar paso a paso y pulsar cada capa para saber qué hace. Cada ejecución indica si es `Live` o `Simulated` |
 | Ver la documentación de la API | [Scalar Docs](http://localhost:8110/docs) (OpenAPI .NET 10 nativo en `/docs`) |
 | Ver el flujo funcionando online | [Demo pública](https://policy.naindev.com/) — un clic, sin registro |
+| Probarlo yo mismo sin token | [Pestaña Pruébalo](https://policy.naindev.com/#lifecycle): crear, activar, provocar el `412` con la versión antigua y cancelar; todo en el navegador y etiquetado `Simulated`. Con un token local, lo mismo contra la API real |
+| Ver la auditoría de accesibilidad | `npm run audit:a11y` en `PolicyOperations.Client`: cero violaciones axe (WCAG 2.x A/AA) en las cinco pestañas, evidencia en [docs/public-demo.md](docs/public-demo.md) |
 | Reproducirlo yo mismo | `curl -i -X POST "https://nain-policy-demo-api.azurewebsites.net/api/v1/demo/run" -H "Accept: application/json"` |
 | Ver que las pruebas son reales | [Workflow de CI](https://github.com/Nain9Dev/API-Gestion-Financiera/actions/workflows/ci.yml): la suite de integración corre contra un SQL Server real en cada push |
 | Ver qué regla cubre cada test | [docs/traceability.md](docs/traceability.md) |
@@ -58,6 +77,7 @@ El objetivo no es aparentar un SaaS terminado, sino demostrar con código limpio
 - Evidencia por paso en la demo: método, ruta, estado, ETag y duración medida en servidor.
 - Cabeceras de seguridad base en todas las respuestas y CSP restrictiva en la página de demo.
 - Tests de dominio, de aplicación sin base de datos, de API, autorización, aislamiento y migrations contra SQL Server 2025 real.
+- Cliente Vue 3 bilingüe (español/inglés) con blueprint narrado, modo práctica sin token, carrera de concurrencia, historial con continuidad entre pestañas y sondas de salud honestas; sus 116 tests y su build corren en CI.
 
 ## Arquitectura y Diagrama C4
 
@@ -149,6 +169,7 @@ Abre [Probar API](https://nain-policy-demo-api.azurewebsites.net/demo/) para eje
 - 4 tests de migrations y recuperación segura.
 - 68 tests en la suite; 21 utilizan SQL Server real.
 - CI ejecuta la suite de SQL Server contra un contenedor real de SQL Server en cada push, así que la afirmación anterior la verifica el pipeline, no el README.
+- 116 tests Vitest del cliente (narración, recorrido, layout, catálogo bilingüe, origen de cada operación, sondas de salud) y su build en el trabajo `client-tests` de CI.
 - CodeQL analiza el código C# en cada push y semanalmente; Dependabot mantiene NuGet y Actions al día.
 - EF Core sin cambios de modelo pendientes de migration.
 - Auditoría NuGet sin vulnerabilidades conocidas: el paso de CI falla si aparece alguna.
@@ -163,7 +184,7 @@ Abre [Probar API](https://nain-policy-demo-api.azurewebsites.net/demo/) para eje
 - No se han implementado retención/export del audit trail, restauración probada ni alertas operativas para clientes. La demo sí avisa cuando Azure SQL Free se acerca a su cuota.
 - No existe evaluación de riesgo, billing, integraciones ni multi-región.
 - El arranque en frío del plan gratuito sigue existiendo: se comunica, no se elimina.
-- La corrección de resiliencia está implementada y verificada en local, pero **todavía no desplegada**; hasta que se publique, el `500` medido el 2026-09-08 sigue siendo reproducible en producción.
+- La corrección de resiliencia (`503` con `Retry-After` durante el arranque en frío) está desplegada desde el 2026-10-26; la evidencia está en [docs/public-demo.md](docs/public-demo.md).
 - No se permiten datos personales reales ni exposición de los puertos locales a internet.
 - La capacidad objetivo todavía no tiene un load test reproducible.
 
