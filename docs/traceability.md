@@ -1,6 +1,6 @@
 # Traceability
 
-- Document version: 0.8
+- Document version: 0.9
 - Status: Active
 - Date: 2026-11-03
 - Scope: Approved rule identifier to the test that demonstrates it
@@ -232,6 +232,13 @@ Suite `C` — `PolicyOperations.Client` Vitest (`npm test`, no browser).
 | `REQ-231` 503 is waking with Retry-After; other non-2xx is unhealthy | C | `reports waking on a 503 and reads Retry-After`, `reports unhealthy on any other non-2xx answer` |
 | `REQ-232` network failure is unreachable, never a stub | C | `reports unreachable when the network fails and never invents a healthy answer` |
 | `REQ-233` `REQ-234` stage strip and localized outcomes | — | Browser walkthrough recorded in `docs/public-demo.md` (2026-11-03) |
+
+## The history in plain words (spec 012 proposed)
+
+| Requirement | Suite | Test |
+|---|---|---|
+| `REQ-240` one plain sentence per transition, state names from the catalogue | C | `says who did what and when, in plain English, with the reason when there is one`, `says it in Spanish with the state names a reader knows`, `never prints the raw status words of the API` |
+| `REQ-241` `REQ-242` copyable history, empty case | C | `lists one numbered sentence per transition with the policy and the origin`, `says so when there is nothing recorded`; browser: clipboard read back |
 | `REQ-158` reduced motion: no flow, no auto walkthrough, stepping works | — | Browser walkthrough with `prefers-reduced-motion: reduce` emulated (2026-11-03) |
 
 ## Known gaps
