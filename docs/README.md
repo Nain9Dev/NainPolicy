@@ -64,6 +64,8 @@ If two approved sources conflict and neither has precedence, the affected work s
 | `specs/009-anonymous-sandbox/` | Design of the sandbox: surface, allow-list, isolation, caps, trial before enabling; no implementation authorized | 0.1 | Proposed, design only | None |
 | `specs/010-journey/` | Plain-language tab names, next-step band on every tab, closing card of the practice flow, delivery line | 0.1 | Proposed | None |
 | `specs/011-honest-health/` | Health probes report what the API said or that it was unreachable; backend stage in plain language | 0.1 | Proposed | None |
+| `docs/decisions/ADR-011-self-hosted-fonts.md` | Fonts served from the own origin under their licence; no third party in the first paint | 0.1 | Proposed | None |
+| `specs/014-first-paint/` | Self-hosted fonts, deferred brand sheet, preload, `robots.txt`; measured with Lighthouse | 0.1 | Proposed | None |
 | `AGENTS.md` | Canonical constitution for agents and contributors | 0.1 | Active | None |
 | `SECURITY.md` | Vulnerability reporting and security posture | 0.1 | Active | None |
 
