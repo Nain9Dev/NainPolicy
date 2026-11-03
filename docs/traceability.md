@@ -178,6 +178,8 @@ Suite `C` — `PolicyOperations.Client` Vitest (`npm test`, no browser).
 | `REQ-154` walkthrough at least 1.2 s per step, pausable, slower than the trace | C | `advances at a readable pace of at least 1.2 s per step`, `shows the first step immediately…`, `is slower than the fast trace of spec 005…`; browser: auto-start after trace, Pause / Replay observed |
 | `REQ-156` stacked layout under 720 px, same nodes and edges, no overlap, edges on node borders | C | `uses the stacked layout under 720 px and the wide layout from 720 px`, `defines every node and every edge`, `never overlaps two nodes`, `starts and ends each edge on the boundary of the nodes it joins`; browser: 390 px has no horizontal scroll |
 | `REQ-157` legend | — | Browser walkthrough recorded in `docs/public-demo.md` (2026-11-03) |
+| `REQ-160` secondary views open with eyebrow, title and one sentence | — | Browser walkthrough recorded in `docs/public-demo.md` (2026-11-03) |
+| `REQ-161` demo results labelled `Live` / `Simulated`, never verified | C | `names a live result after SQL Server and a simulated one after the browser`, `never calls a simulated result live, verified or real`; browser: chip observed on Audit and Concurrency |
 | `REQ-158` reduced motion: no flow, no auto walkthrough, stepping works | — | Browser walkthrough with `prefers-reduced-motion: reduce` emulated (2026-11-03) |
 
 ## Known gaps

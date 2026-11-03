@@ -20,6 +20,7 @@ engineer is looking at it. Reviewed in a browser on 2026-11-03 at 1440 px and 39
 | After a run, steps can be clicked but there is no previous/next control, no keyboard path and no pacing | The run cannot be *watched*; it can only be inspected |
 | Nodes are not interactive | There is no way to ask "what is Application?" without leaving the page |
 | Under 640 px the SVG keeps a 760 px minimum width and scrolls sideways | On a phone the diagram is a strip the visitor pans across; the right half is hidden |
+| The Audit and Concurrency tabs show a demo result with badges such as `Append-Only Verified` and `Simulate Live Race Condition`, whatever its origin | A result produced by the in-browser fallback is presented as verified evidence, against ADR-007 |
 | No legend | The meaning of the green, red and dotted lines is not stated anywhere |
 
 ## Goal
@@ -80,6 +81,15 @@ Notation: EARS ("When X, the system shall Y").
   shall show that layer's plain-language description and its responsibilities. Every node shall
   have one.
 
+### Secondary views
+
+- `REQ-160` When a secondary view (Lifecycle, Concurrency, Audit, Resilience) renders, it shall open
+  with an eyebrow, a plain-language title and one sentence that says what the tab demonstrates,
+  in the same visual form as the narrator band of the blueprint.
+- `REQ-161` When a secondary view shows data that came from a demo run, it shall label the origin
+  with the same `Live` / `Simulated` wording and colours as the blueprint, and shall never call a
+  simulated result verified, real or live.
+
 ### Layout and legend
 
 - `REQ-156` When the viewport is narrower than 720 px, the blueprint shall render a stacked layout
@@ -98,4 +108,5 @@ Notation: EARS ("When X, the system shall Y").
 | `REQ-153` (bounds) `REQ-154` (pace) | Vitest: `walkthrough.test.ts` |
 | `REQ-155` (every node has a guide) | Vitest: `narration.test.ts` |
 | `REQ-156` (threshold, same nodes and edges, no overlapping boxes) | Vitest: `blueprintLayout.test.ts` |
-| `REQ-150` `REQ-153` (keys) `REQ-154` (pause) `REQ-157` `REQ-158` | Browser walkthrough recorded in `docs/public-demo.md` with the date, at 1440 px and 390 px, with reduced motion emulated |
+| `REQ-161` (wording) | Vitest: `narration.test.ts` (`describeSource`) |
+| `REQ-150` `REQ-153` (keys) `REQ-154` (pause) `REQ-157` `REQ-158` `REQ-160` `REQ-161` (views) | Browser walkthrough recorded in `docs/public-demo.md` with the date, at 1440 px and 390 px, with reduced motion emulated |

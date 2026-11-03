@@ -132,13 +132,4 @@ describe('api.runScenario', () => {
     expect(run.source).toBe('simulated');
   });
 
-  it('keeps runPublicDemo as a thin alias returning only the response', async () => {
-    wakeUpOk();
-    fetchMock.mockResolvedValueOnce(jsonResponse(liveResponse));
-    const { api } = await loadApi('https://api.example.test');
-
-    const response = await api.runPublicDemo();
-
-    expect(response.runId).toBe('06C3575F');
-  });
 });

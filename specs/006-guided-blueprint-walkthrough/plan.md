@@ -35,8 +35,11 @@ All changes are in `PolicyOperations.Client`; the API is untouched.
      form field.
    - A step rail under the stage replaces the five cards: numbered, connected, clickable.
    - A legend row explains the line states (`REQ-157`).
-6. `style.css`: node and panel depth (soft surface gradient, hairline frame, one glow colour), a
-   `--motion` duration token that reduced motion sets to zero.
+6. `components/ViewHeader.vue` and `components/SourceChip.vue`: the plain-language opening and the
+   honest origin chip shared by the blueprint and the four secondary views (`REQ-160`, `REQ-161`).
+   Audit and Concurrency switch from `runPublicDemo()` (which drops the origin) to `runScenario()`.
+7. `style.css` is unchanged: depth comes from SVG gradients and glow filters inside the component
+   and from scoped styles; reduced motion is handled per component with the existing media query.
 
 ## Why the fast trace stays
 

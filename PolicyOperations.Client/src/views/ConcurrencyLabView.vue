@@ -1,12 +1,23 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import SourceChip from '../components/SourceChip.vue';
+import ViewHeader from '../components/ViewHeader.vue';
 import { api, ApiError } from '../services/api';
-import type { PublicDemoRunResponse } from '../types/contracts';
+import type { PublicDemoRunResponse, ScenarioSource } from '../types/contracts';
 
 const isRunning = ref(false);
 const racePhase = ref<'idle' | 'read' | 'alpha_committed' | 'beta_rejected' | 'completed'>('idle');
 const demoResult = ref<PublicDemoRunResponse | null>(null);
 const errorMessage = ref<string | null>(null);
+const source = ref<ScenarioSource | null>(null);
+
+const PHASE_TEXT: Record<typeof racePhase.value, string> = {
+  idle: 'Ready',
+  read: 'Both operators read the same policy',
+  alpha_committed: 'Alpha saved first; the version changed',
+  beta_rejected: 'Beta still holds the old version: refused with 412',
+  completed: 'Done: nothing was overwritten',
+};
 
 // Simulated / real state for the two operators
 const sharedPolicyNumber = ref('SYNTH-CONCUR-2026');
@@ -33,7 +44,9 @@ async function runRaceSimulation() {
     racePhase.value = 'alpha_committed';
 
     // Step 2: Call the real backend demo scenario to get authoritative numbers and steps
-    const res = await api.runPublicDemo();
+    const run = await api.runScenario();
+    const res = run.response;
+    source.value = run.source;
     demoResult.value = res;
 
     // Extract actual ETags from backend steps
@@ -80,10 +93,13 @@ async function runRaceSimulation() {
 <template>
   <div class="concurrency-lab">
     <!-- Lab Explanation Card -->
-    <div class="glass-panel info-card">
-      <h2>Concurrency lab</h2>
-      <p class="description">Two operators, one <code>rowversion</code> · the stale <code>If-Match</code> gets <code>412</code>.</p>
+    <ViewHeader
+      eyebrow="Two operators, one policy"
+      title="Why a stale write is refused"
+      lede="Alpha and Beta read the same policy. Alpha saves first, so the stored version changes; Beta's request still carries the old version and gets a 412 instead of silently overwriting Alpha's work."
+    />
 
+    <div class="glass-panel info-card">
       <div class="lab-controls">
         <button
           type="button"
@@ -95,12 +111,14 @@ async function runRaceSimulation() {
           <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline>
           </svg>
-          <span>{{ isRunning ? 'Simulating Race Condition...' : 'Simulate Live Race Condition' }}</span>
+          <span>{{ isRunning ? 'Running the race…' : 'Run the race' }}</span>
         </button>
 
-        <span class="phase-indicator">
-          Current Phase: <strong>{{ racePhase.toUpperCase() }}</strong>
+        <span class="phase-indicator" role="status" aria-live="polite">
+          <strong>{{ PHASE_TEXT[racePhase] }}</strong>
         </span>
+
+        <SourceChip v-if="source && racePhase === 'completed'" :source="source" />
       </div>
     </div>
 
@@ -116,14 +134,14 @@ async function runRaceSimulation() {
         <div class="operator-header">
           <div class="avatar alpha-avatar">α</div>
           <div>
-            <h3>Operator Alpha (Underwriter)</h3>
-            <span class="operator-role">Policy Administration Terminal</span>
+            <h3>Operator Alpha</h3>
+            <span class="operator-role">underwriter · saves first</span>
           </div>
           <span
             v-if="racePhase === 'alpha_committed' || racePhase === 'completed'"
             class="badge badge-emerald"
           >
-            HTTP 200 OK
+            200 saved
           </span>
         </div>
 
@@ -131,15 +149,15 @@ async function runRaceSimulation() {
           <div class="timeline-step">
             <span class="step-badge">1</span>
             <div class="step-text">
-              <strong>Reads Policy:</strong> {{ sharedPolicyNumber }}
-              <div class="font-mono token-box">Holds ETag: {{ initialEtag }}</div>
+              <strong>Reads the policy</strong> {{ sharedPolicyNumber }}
+              <div class="font-mono token-box">version {{ initialEtag }}</div>
             </div>
           </div>
 
           <div class="timeline-step" :class="{ active: racePhase === 'alpha_committed' || racePhase === 'completed' }">
             <span class="step-badge">2</span>
             <div class="step-text">
-              <strong>Submits Lifecycle Update:</strong>
+              <strong>Activates it with that version</strong>
               <div class="font-mono request-sample">
                 POST /policies/activate<br />
                 If-Match: {{ initialEtag }}
@@ -150,10 +168,10 @@ async function runRaceSimulation() {
           <div class="timeline-step" :class="{ active: racePhase === 'alpha_committed' || racePhase === 'completed' }">
             <span class="step-badge">3</span>
             <div class="step-text">
-              <strong>Database Mutation Accepted:</strong>
+              <strong>Saved: the stored version moves on</strong>
               <div class="status-box text-emerald">
-                SQL Server rowversion incremented.<br />
-                New ETag issued: <code>{{ alphaUpdatedEtag }}</code>
+                SQL Server assigns a new version.<br />
+                New ETag: <code>{{ alphaUpdatedEtag }}</code>
               </div>
             </div>
           </div>
@@ -168,14 +186,14 @@ async function runRaceSimulation() {
         <div class="operator-header">
           <div class="avatar beta-avatar">β</div>
           <div>
-            <h3>Operator Beta (Claims Adjuster)</h3>
-            <span class="operator-role">Claims & Settlement Terminal</span>
+            <h3>Operator Beta</h3>
+            <span class="operator-role">claims adjuster · arrives second</span>
           </div>
           <span
             v-if="racePhase === 'beta_rejected' || racePhase === 'completed'"
             class="badge badge-rose"
           >
-            HTTP 412 Conflict
+            412 refused
           </span>
         </div>
 
@@ -183,15 +201,15 @@ async function runRaceSimulation() {
           <div class="timeline-step">
             <span class="step-badge">1</span>
             <div class="step-text">
-              <strong>Reads Same Policy:</strong> {{ sharedPolicyNumber }}
-              <div class="font-mono token-box">Holds Stale ETag: {{ initialEtag }}</div>
+              <strong>Reads the same policy</strong> {{ sharedPolicyNumber }}
+              <div class="font-mono token-box">version {{ initialEtag }}</div>
             </div>
           </div>
 
           <div class="timeline-step" :class="{ active: racePhase === 'beta_rejected' || racePhase === 'completed' }">
             <span class="step-badge">2</span>
             <div class="step-text">
-              <strong>Attempts Conflicting Update:</strong>
+              <strong>Cancels it with the version it read</strong>
               <div class="font-mono request-sample">
                 POST /policies/cancel<br />
                 If-Match: {{ betaAttemptEtag }} <span class="stale-tag">[STALE]</span>
@@ -202,10 +220,10 @@ async function runRaceSimulation() {
           <div class="timeline-step" :class="{ active: racePhase === 'beta_rejected' || racePhase === 'completed' }">
             <span class="step-badge">3</span>
             <div class="step-text">
-              <strong>Deterministic Rejection:</strong>
+              <strong>Refused: the version is stale</strong>
               <div class="status-box text-rose">
                 HTTP 412 Precondition Failed.<br />
-                Silent overwrite prevented.
+                Beta must read again before changing anything.
               </div>
             </div>
           </div>
@@ -217,8 +235,8 @@ async function runRaceSimulation() {
     <div v-if="racePhase === 'beta_rejected' || racePhase === 'completed'" class="glass-panel payload-panel">
       <div class="panel-header">
         <div>
-          <h3>RFC 7807 / 9457 Concurrency Conflict Payload</h3>
-          <span class="sub-hint">Exact Problem Details body delivered to Operator Beta</span>
+          <h3>What Beta receives</h3>
+          <span class="sub-hint">Problem Details body (RFC 9457) returned with the 412</span>
         </div>
         <span class="badge badge-rose">412 Precondition Failed</span>
       </div>
@@ -249,29 +267,6 @@ async function runRaceSimulation() {
   flex-wrap: wrap;
 }
 
-.info-card h2 {
-  font-family: var(--font-heading);
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin-bottom: 0.75rem;
-}
-
-.description {
-  color: var(--text-muted);
-  max-width: 840px;
-  line-height: 1.6;
-  font-size: 0.95rem;
-  margin-bottom: 1.5rem;
-}
-
-.description code {
-  background: rgba(255, 255, 255, 0.08);
-  padding: 0.15rem 0.4rem;
-  border-radius: var(--radius-sm);
-  color: #7dd3fc;
-  font-family: var(--font-mono);
-}
-
 .lab-controls {
   display: flex;
   align-items: center;
@@ -290,8 +285,8 @@ async function runRaceSimulation() {
 }
 
 .phase-indicator strong {
-  color: #38bdf8;
-  font-family: var(--font-mono);
+  color: #ffffff;
+  font-weight: 600;
 }
 
 .error-card {

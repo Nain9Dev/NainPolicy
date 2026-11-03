@@ -1,3 +1,4 @@
+import type { ScenarioSource } from '../types/contracts';
 import type { BlueprintFrame, NodeId } from './blueprintTimeline';
 
 /**
@@ -135,3 +136,15 @@ export const LAYER_GUIDE: Readonly<Record<NodeId, LayerGuide>> = Object.freeze({
     responsibilities: ['Policies: status, amount, version stamp', 'PolicyTransitions: append-only audit ledger', 'Constraints enforce the rules even outside the API'],
   },
 });
+
+export interface SourceText {
+  label: string;
+  title: string;
+}
+
+/** One wording for the origin of a result, shared by every view (ADR-007, REQ-161). */
+export function describeSource(source: ScenarioSource): SourceText {
+  return source === 'live'
+    ? { label: 'Live · SQL Server', title: 'Response from the API and SQL Server' }
+    : { label: 'Simulated · in-browser', title: 'In-browser fallback: the API was unreachable or still waking' };
+}

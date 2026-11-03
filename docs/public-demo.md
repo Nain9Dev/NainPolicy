@@ -21,6 +21,8 @@ without a backend, so every run came from the in-browser fallback and was labell
 | Keyboard | `ArrowLeft` from step 5 goes to step 4; five more presses stop at step 1; `ArrowRight` stops at step 5; inputs on other tabs are not intercepted |
 | Mobile 390 px | Stacked layout, document `scrollWidth` 390 (no horizontal scroll); nodes in one column, Domain and Infrastructure side by side; band, rail and legend stack; chips never overflow their box |
 | Reduced motion emulated | Trace lands directly on step 5; no walkthrough starts; no packets or flow; `Play`, arrows and keys still step |
+| Secondary tabs | Each opens with an eyebrow, a title and one sentence (`Drive one policy yourself`, `Why a stale write is refused`, `Every state change is on record`, `A sleeping database is not a bug`); the state machine on Lifecycle uses the blueprint's green for the current state |
+| Audit and Concurrency origin | Both show `Simulated · in-browser` in amber after loading the demo result without a backend; the former `Append-Only Verified` badge is gone |
 
 ## Client showcase, 2026-10-22
 

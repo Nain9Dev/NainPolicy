@@ -40,6 +40,12 @@ The showcase has to work for all of them without a reading guide.
   (desktop) and a stacked layout (phones). Both carry the same nodes and edges, so the timeline
   model and the tests do not change. Horizontal scrolling of the sheet is removed.
 
+### Secondary views follow the same voice
+
+- Lifecycle, Concurrency, Audit and Resilience open with the same eyebrow, title and one-sentence
+  form as the narrator band, and label any demo result with the same `Live` / `Simulated` chip. A
+  simulated result is never called verified.
+
 ### Visual rules
 
 - One accent for the request path (brand green), one for a rejection (brand red), dotted hairlines

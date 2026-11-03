@@ -21,7 +21,10 @@ Governing spec: 006 (`Proposed`); ADR-008 (`Proposed`). Client only; no API, con
   longer scroll the sheet sideways.
 - A start button over the sheet, a connected step rail and a legend replace the control strip and
   the five step cards. `Stale ETag` is now labelled `Stale version`.
-- 28 new client tests (71 in total).
+- The four secondary tabs open with a plain-language title and one sentence; Audit and Concurrency
+  now label a demo result `Live` or `Simulated` instead of `Verified`, and their wording drops the
+  implementation vocabulary.
+- 29 new client tests (72 in total); the response-only `runPublicDemo` alias is removed because no view uses it.
 
 ## 0.14 — 2026-10-26 — Azure cost guard applied
 

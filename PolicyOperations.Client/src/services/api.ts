@@ -135,11 +135,6 @@ export const api = {
     return { source: 'simulated', response, elapsedMs: Math.round(now() - started) };
   },
 
-  /** Thin alias kept for views that only need the response. */
-  async runPublicDemo(): Promise<PublicDemoRunResponse> {
-    return (await api.runScenario()).response;
-  },
-
   /**
    * Health probes with high-resolution client-side latency timing.
    */

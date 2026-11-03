@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { PublicDemoStepResponse } from '../types/contracts';
 import { buildTimeline, IDLE_FRAME, type NodeId } from './blueprintTimeline';
-import { IDLE_NARRATION, LAYER_GUIDE, MAX_BODY_CHARS, MAX_TITLE_CHARS, narrate } from './narration';
+import { describeSource, IDLE_NARRATION, LAYER_GUIDE, MAX_BODY_CHARS, MAX_TITLE_CHARS, narrate } from './narration';
 
 const policyPath = '/api/v1/policies/9f1c7a52-0000-4000-8000-000000000001';
 
@@ -128,5 +128,17 @@ describe('LAYER_GUIDE (REQ-155)', () => {
 
   it('has no guide for an id that is not a node', () => {
     expect((LAYER_GUIDE as Record<string, unknown>)['cache']).toBeUndefined();
+  });
+});
+
+describe('describeSource (REQ-161)', () => {
+  it('names a live result after SQL Server and a simulated one after the browser', () => {
+    expect(describeSource('live').label).toBe('Live · SQL Server');
+    expect(describeSource('simulated').label).toBe('Simulated · in-browser');
+  });
+
+  it('never calls a simulated result live, verified or real', () => {
+    const text = describeSource('simulated');
+    expect(`${text.label} ${text.title}`).not.toMatch(/\blive\b|verified|real/i);
   });
 });

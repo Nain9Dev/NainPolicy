@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import ArchitectureBlueprint, { type BlueprintPhase } from '../components/ArchitectureBlueprint.vue';
+import SourceChip from '../components/SourceChip.vue';
 import { layoutFor, type BlueprintLayout } from '../architecture/blueprintLayout';
 import { buildTimeline, IDLE_FRAME, replayDelayMs, type BlueprintFrame, type NodeId } from '../architecture/blueprintTimeline';
 import { IDLE_NARRATION, LAYER_GUIDE, narrate } from '../architecture/narration';
@@ -353,10 +354,7 @@ const walkLabel = computed(() => {
             <span class="source-dot" aria-hidden="true"></span>
             {{ warmState === 'pending' ? 'Waking free-tier database' : 'Database ready' }}
           </span>
-          <span v-if="run" :class="['source', `source-${run.source}`]" :title="run.source === 'live' ? 'Response from the API and SQL Server' : 'In-browser fallback: the API was unreachable'">
-            <span class="source-dot" aria-hidden="true"></span>
-            {{ run.source === 'live' ? 'Live · SQL Server' : 'Simulated · in-browser' }}
-          </span>
+          <SourceChip v-if="run" :source="run.source" />
           <span v-if="run" class="run-id font-mono">run {{ run.response.runId }}</span>
           <span v-if="errorMessage && run" class="error font-mono" role="alert">{{ errorMessage }}</span>
           <button v-if="run" type="button" class="btn btn-secondary small json-btn" :aria-expanded="showJson" @click="showJson = !showJson">JSON</button>
@@ -699,18 +697,6 @@ const walkLabel = computed(() => {
   justify-content: flex-end;
 }
 
-.source {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 0.3rem 0.65rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid;
-}
 
 .source-dot {
   width: 8px;
@@ -719,21 +705,8 @@ const walkLabel = computed(() => {
   background: currentColor;
 }
 
-.source-live {
-  color: var(--brand-green);
-  border-color: rgba(128, 255, 0, 0.5);
-  background: rgba(128, 255, 0, 0.08);
-}
 
-.source-live .source-dot {
-  box-shadow: 0 0 10px var(--brand-green);
-}
 
-.source-simulated {
-  color: #ffd27a;
-  border-color: rgba(255, 176, 32, 0.5);
-  background: rgba(255, 176, 32, 0.08);
-}
 
 .warm {
   display: inline-flex;
