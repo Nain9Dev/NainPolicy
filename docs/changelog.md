@@ -7,6 +7,14 @@
 Relevant behavioural changes, newest first. Dates are the date the change was made, not released.
 A change is listed only when it alters behaviour, contracts, evidence or operating boundaries.
 
+## 0.26 — 2026-11-03 — Money and dates a reader understands
+
+Governing spec: 013 (`Proposed`). Client only.
+
+- The practice inspector writes the insured amount as money (`150.000,00 €`), and the coverage
+  period and creation time as dates and times in the page locale; the raw API values stay as
+  tooltips. 4 new client tests (125 in total).
+
 ## 0.25 — 2026-11-03 — The history in plain words
 
 Governing spec: 012 (`Proposed`). Client only.
