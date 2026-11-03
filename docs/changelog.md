@@ -7,6 +7,22 @@
 Relevant behavioural changes, newest first. Dates are the date the change was made, not released.
 A change is listed only when it alters behaviour, contracts, evidence or operating boundaries.
 
+## 0.18 — 2026-11-03 — Accessibility: zero axe violations on every tab
+
+Closes the `REQ-123` gap of spec 002 with evidence. Client only.
+
+- `axe-core` audit (WCAG 2.0/2.1/2.2 A and AA plus best practices) on the five tabs: 0 violations
+  after this change; before it reported insufficient contrast of the dim text token (3.8:1),
+  accessible names that did not contain the visible text (locale toggle, blueprint layers),
+  focusable descendants inside a `role="img"`, heading levels that skipped one, and seven form
+  controls without a label.
+- The dim text token is now 6.1:1 on the surface colour; the rejected status pill 5.2:1.
+- Blueprint layers are named by their visible title and tagline; the focus target is the box; the
+  sheet is a `group` with a description instead of an image with focusable children.
+- Card titles are `h3` under the view `h2`; the locale toggle's name starts with its visible text.
+- `npm run audit:a11y` (`scripts/axe-audit.cjs`) reruns the audit against a local preview; it
+  needs Playwright with Chromium available to Node and is not part of CI.
+
 ## 0.17 — 2026-11-03 — Practice mode: the workbench works without a token
 
 Governing spec: 008 (`Proposed`). Client only; no API change.

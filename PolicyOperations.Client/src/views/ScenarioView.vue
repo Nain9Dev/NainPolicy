@@ -617,7 +617,7 @@ async function copyEvidence() {
 }
 
 .status-pill.is-rejected {
-  background: var(--brand-red);
+  background: #c40018; /* 5.2:1 with white text; the brand red alone is 4.0:1 */
   color: #ffffff;
 }
 
