@@ -71,10 +71,11 @@ watch(token, (newVal) => {
           v-else-if="activeTab === 'workbench'"
           :token="token"
           @open-token-modal="isTokenModalOpen = true"
+          @navigate="selectTab"
         />
-        <ConcurrencyLabView v-else-if="activeTab === 'concurrency'" />
-        <AuditTrailView v-else-if="activeTab === 'audit'" :token="token" />
-        <ResilienceProbeView v-else-if="activeTab === 'resilience'" />
+        <ConcurrencyLabView v-else-if="activeTab === 'concurrency'" @navigate="selectTab" />
+        <AuditTrailView v-else-if="activeTab === 'audit'" :token="token" @navigate="selectTab" />
+        <ResilienceProbeView v-else-if="activeTab === 'resilience'" @navigate="selectTab" />
       </main>
 
       <footer class="app-footer glass-panel">

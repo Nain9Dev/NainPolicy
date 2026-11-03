@@ -1,4 +1,5 @@
 import type { NodeId } from '../architecture/blueprintTimeline';
+import type { TabId } from '../architecture/tabRoute';
 
 /**
  * Visitor-facing copy of the client in both locales (spec 007, ADR-009). This catalogue is the one
@@ -111,7 +112,16 @@ export interface Messages {
   layers: Record<NodeId, LayerText>;
   source: { live: SourceText; simulated: SourceText };
   value: { eyebrow: string; title: string; cards: ValueCard[] };
-  engage: { eyebrow: string; title: string; body: string; primary: string; secondary: string };
+  engage: { eyebrow: string; title: string; body: string; deliver: string; primary: string; secondary: string };
+  journey: {
+    ariaLabel: string;
+    progress: string;
+    total: number;
+    lede: string;
+    finishLede: string;
+    finish: string;
+    next: Record<TabId, string>;
+  };
   views: { lifecycle: ViewText; concurrency: ViewText; audit: ViewText; resilience: ViewText };
   summary: { headline: string; server: string; final: string; synthetic: string };
   footer: { meta: string; architecture: string; source: string };
@@ -220,6 +230,11 @@ export interface Messages {
     staleExplained: string;
     lastAnswer: string;
     status: string;
+    doneTitle: string;
+    doneBody: string;
+    doneBodyNoStale: string;
+    doneCta: string;
+    defaultReason: string;
   };
 }
 
@@ -238,11 +253,11 @@ const en: Messages = {
     proofs: ['Live on Azure SQL', 'Tests against a real SQL Server on every push', 'Zero-euro infrastructure', 'Open source, MIT'],
   },
   nav: {
-    blueprint: 'Blueprint',
-    lifecycle: 'Lifecycle',
-    concurrency: 'Concurrency',
-    audit: 'Audit',
-    resilience: 'Resilience',
+    blueprint: 'How it works',
+    lifecycle: 'Try it',
+    concurrency: 'Two at once',
+    audit: 'History',
+    resilience: 'Controlled failures',
     jwt: 'JWT',
     openapi: 'OpenAPI',
     source: 'Source',
@@ -381,8 +396,24 @@ const en: Messages = {
     eyebrow: 'Next step',
     title: 'Want this rigor in your system?',
     body: 'This demo is a bounded slice built with the method behind every delivery: specification first, tests before code, clean architecture and public evidence. The same method fits a custom policy API, a legacy .NET modernization or deterministic data validation.',
+    deliver: 'What a delivery includes: database, backend and frontend, with tests and documentation, as in this repository.',
     primary: 'Talk to naindev',
     secondary: 'See the source',
+  },
+  journey: {
+    ariaLabel: 'Next step',
+    progress: 'Step {n} of {total}',
+    total: 5,
+    lede: 'Keep going: the next tab shows the next thing the system protects.',
+    finishLede: 'You have seen the whole path. If this is the rigor you want in your system, let us talk.',
+    finish: 'Talk to naindev',
+    next: {
+      scenario: 'See how it works',
+      workbench: 'Now try it yourself',
+      concurrency: 'See two people editing at once',
+      audit: 'Read the history',
+      resilience: 'See a controlled failure',
+    },
   },
   views: {
     lifecycle: {
@@ -533,6 +564,11 @@ const en: Messages = {
     staleExplained: 'The server compared the old version with the stored one and refused the change with 412. The policy did not change.',
     lastAnswer: 'Last answer',
     status: 'Status',
+    doneTitle: 'You drove a whole policy',
+    doneBody: 'You created it, activated it, had a stale write refused and cancelled it. Every change is on record; the history tab shows it as the server stored it.',
+    doneBodyNoStale: 'You created it, activated it and cancelled it. Every change is on record; the history tab shows it as the server stored it.',
+    doneCta: 'Read its history',
+    defaultReason: 'Cancelled at the customer request',
   },
 };
 
@@ -546,11 +582,11 @@ const es: Messages = {
     proofs: ['En vivo sobre Azure SQL', 'Tests contra SQL Server real en cada push', 'Infraestructura a 0 €', 'Código abierto MIT'],
   },
   nav: {
-    blueprint: 'Blueprint',
-    lifecycle: 'Ciclo de vida',
-    concurrency: 'Concurrencia',
-    audit: 'Auditoría',
-    resilience: 'Resiliencia',
+    blueprint: 'Cómo funciona',
+    lifecycle: 'Pruébalo',
+    concurrency: 'Dos a la vez',
+    audit: 'Historial',
+    resilience: 'Fallos controlados',
     jwt: 'JWT',
     openapi: 'OpenAPI',
     source: 'Código',
@@ -689,8 +725,24 @@ const es: Messages = {
     eyebrow: 'Siguiente paso',
     title: '¿Quieres este rigor en tu sistema?',
     body: 'Esta demo es una porción acotada, construida con el método que aplico en cada entrega: especificación primero, pruebas antes del código, arquitectura limpia y evidencia pública. El mismo método sirve para una API de pólizas a medida, para modernizar un .NET heredado o para validar datos de forma determinista.',
+    deliver: 'Qué incluye una entrega: base de datos, backend y frontend, con pruebas y documentación, como en este repositorio.',
     primary: 'Hablar con naindev',
     secondary: 'Ver el código',
+  },
+  journey: {
+    ariaLabel: 'Siguiente paso',
+    progress: 'Paso {n} de {total}',
+    total: 5,
+    lede: 'Sigue: la siguiente pestaña muestra lo siguiente que protege el sistema.',
+    finishLede: 'Has visto el camino completo. Si este es el rigor que quieres en tu sistema, hablemos.',
+    finish: 'Hablar con naindev',
+    next: {
+      scenario: 'Ver cómo funciona',
+      workbench: 'Ahora pruébalo tú',
+      concurrency: 'Ver a dos personas editando a la vez',
+      audit: 'Leer el historial',
+      resilience: 'Ver un fallo controlado',
+    },
   },
   views: {
     lifecycle: {
@@ -841,6 +893,11 @@ const es: Messages = {
     staleExplained: 'El servidor comparó la versión antigua con la almacenada y rechazó el cambio con 412. La póliza no cambió.',
     lastAnswer: 'Última respuesta',
     status: 'Estado',
+    doneTitle: 'Has conducido una póliza completa',
+    doneBody: 'La has creado, activado, has visto rechazada una escritura obsoleta y la has cancelado. Cada cambio queda registrado; la pestaña de historial lo muestra tal y como lo guardó el servidor.',
+    doneBodyNoStale: 'La has creado, activado y cancelado. Cada cambio queda registrado; la pestaña de historial lo muestra tal y como lo guardó el servidor.',
+    doneCta: 'Leer su historial',
+    defaultReason: 'Cancelación a petición del cliente',
   },
 };
 

@@ -156,6 +156,16 @@ Production after zip deploy:
 The residual slowness is the Azure SQL free-tier resume after idle (about 1 to 2 minutes), which
 the offer does not allow removing. The page probes readiness and retries (ADR-006).
 
+## One path through the tabs, 2026-11-03
+
+Spec 010. Observed with Playwright and Chromium in `es-ES` at 1440 px: tabs `Cómo funciona`,
+`Pruébalo`, `Dos a la vez`, `Historial`, `Fallos controlados`; every tab ends with `Paso n de 5`
+and the next action (`Ahora pruébalo tú`, `Ver a dos personas editando a la vez`, `Leer el
+historial`, `Ver un fallo controlado`, `Hablar con naindev`); the button opens the next tab at the
+top of the page; cancelling a practised policy shows `Has conducido una póliza completa` with
+`Leer su historial`, which opens the history of that policy; the engagement band shows the delivery
+line; no horizontal scroll.
+
 ## Azure `/demo/` page, 2026-11-03
 
 The server-rendered Spanish page was restyled on the blueprint identity and links to the guided
