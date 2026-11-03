@@ -180,6 +180,7 @@ Suite `C` — `PolicyOperations.Client` Vitest (`npm test`, no browser).
 | `REQ-156` stacked layout under 720 px, same nodes and edges, no overlap, edges on node borders | C | `uses the stacked layout under 720 px and the wide layout from 720 px`, `defines every node and every edge`, `never overlaps two nodes`, `starts and ends each edge on the boundary of the nodes it joins`; browser: 390 px has no horizontal scroll |
 | `REQ-157` legend | — | Browser walkthrough recorded in `docs/public-demo.md` (2026-11-03) |
 | `REQ-160` secondary views open with eyebrow, title and one sentence | — | Browser walkthrough recorded in `docs/public-demo.md` (2026-11-03) |
+| `REQ-162` compact current-step strip on phones | — | Browser at 390 px: strip visible at the bottom while the sheet is on screen, absent at 1440 px (2026-11-03) |
 | `REQ-161` demo results labelled `Live` / `Simulated`, never verified | C | `names a live result after SQL Server and a simulated one after the browser`, `never calls a simulated result live, verified or real`; browser: chip observed on Audit and Concurrency |
 
 ## Commercial layer and locale (spec 007, ADR-009 proposed)

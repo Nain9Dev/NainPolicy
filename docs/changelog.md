@@ -7,6 +7,15 @@
 Relevant behavioural changes, newest first. Dates are the date the change was made, not released.
 A change is listed only when it alters behaviour, contracts, evidence or operating boundaries.
 
+## 0.24 — 2026-11-03 — Narration stays on screen on phones
+
+Spec 006, `REQ-162`. Client only.
+
+- On screens narrower than 720 px a compact strip with the current step (position, title,
+  previous, pause, next) stays at the bottom of the viewport while the tall stacked sheet is on
+  screen, so the walkthrough can be followed without scrolling back and forth. Not shown on wide
+  screens.
+
 ## 0.23 — 2026-11-03 — Honest health probes and a readable backend state
 
 Governing spec: 011 (`Proposed`). Client only.

@@ -156,6 +156,13 @@ Production after zip deploy:
 The residual slowness is the Azure SQL free-tier resume after idle (about 1 to 2 minutes), which
 the offer does not allow removing. The page probes readiness and retries (ADR-006).
 
+## Narration on phones, 2026-11-03
+
+Spec 006 `REQ-162`. Observed with Playwright and Chromium in `es-ES` at 390 px: after a run, a
+compact strip with `Paso n de 5`, the step title and previous/pause/next stays at the bottom of the
+viewport while the stacked sheet is on screen and follows the walkthrough; at 1440 px it is not
+rendered. No horizontal scroll.
+
 ## Honest health probes, 2026-11-03
 
 Spec 011. Observed with Playwright and Chromium in `es-ES` at 1440 px without a backend: both

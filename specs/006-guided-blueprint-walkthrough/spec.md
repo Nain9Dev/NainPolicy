@@ -90,6 +90,13 @@ Notation: EARS ("When X, the system shall Y").
   with the same `Live` / `Simulated` wording and colours as the blueprint, and shall never call a
   simulated result verified, real or live.
 
+### Phones
+
+- `REQ-162` When the stacked layout is in use and a run exists, a compact strip with the current
+  step (position, title, previous, pause and next) shall stay visible at the bottom of the
+  viewport while the tall sheet is on screen, so the narration is never off screen during the
+  walkthrough. On wide screens the strip is not shown.
+
 ### Layout and legend
 
 - `REQ-156` When the viewport is narrower than 720 px, the blueprint shall render a stacked layout
