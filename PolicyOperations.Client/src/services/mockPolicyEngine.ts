@@ -2,7 +2,6 @@ import type {
   ActivatePolicyRequest,
   CancelPolicyRequest,
   CreatePolicyRequest,
-  HealthCheckResult,
   PolicyResponse,
   PolicyTransitionResponse,
   PublicDemoRunResponse,
@@ -161,21 +160,6 @@ export const mockPolicyEngine = {
       steps,
       policy,
       transitions: transList,
-    };
-  },
-
-  probeHealth(endpoint: '/health' | '/health/ready'): HealthCheckResult {
-    return {
-      status: 'Healthy',
-      statusCode: 200,
-      totalDurationMs: 4,
-      timestamp: new Date().toISOString(),
-      details: {
-        database: 'Simulated',
-        engine: 'In-browser fallback',
-        endpoint,
-        status: 'Healthy',
-      },
     };
   },
 
