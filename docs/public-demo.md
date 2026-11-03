@@ -156,6 +156,15 @@ Production after zip deploy:
 The residual slowness is the Azure SQL free-tier resume after idle (about 1 to 2 minutes), which
 the offer does not allow removing. The page probes readiness and retries (ADR-006).
 
+## Social preview card, 2026-11-03
+
+Spec 015. `npm run build:og` rendered `public/og-cover.png` (1200 by 630, 94 KB) with Chromium
+from the hero copy and the self-hosted fonts. Reviewed: title on two lines, lede on two lines, the
+four layers lit in the top-right corner, three proofs on one line each (`En vivo sobre Azure SQL`,
+`Tests contra SQL Server real`, `Código abierto MIT`) and the address in the brand frame; nothing
+clipped. `npm run build` copies the file to `dist/`. Not observed: the rendering by each social
+network, which caches the previous image until the owner refreshes it (`T-1504`).
+
 ## First paint, 2026-11-03
 
 Spec 014. Lighthouse 12.8 against the built client (`vite preview`, `http://localhost:5375/`)

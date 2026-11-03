@@ -7,6 +7,18 @@
 Relevant behavioural changes, newest first. Dates are the date the change was made, not released.
 A change is listed only when it alters behaviour, contracts, evidence or operating boundaries.
 
+## 0.28 — 2026-11-03 — A link preview that says what NainPolicy does
+
+Governing spec: 015 (`Proposed`). Client only.
+
+- Sharing `policy.naindev.com` now shows NainPolicy's own card (1200 by 630, served from the same
+  origin): the hero's promise, the four layers lit, and the hero's own proofs. Before it showed
+  the generic cover of `naindev.com`.
+- The card is rendered by `npm run build:og` from the hero copy, the brand tokens and the
+  self-hosted fonts, and committed; the metadata declares its size, an alternative text, `es_ES`
+  and `en_GB` as the alternate locale.
+- 3 new client tests (125 in total).
+
 ## 0.27 — 2026-11-03 — First paint without a third party in the way
 
 Governing spec: 014 (`Proposed`), ADR-011 (`Proposed`). Client only.

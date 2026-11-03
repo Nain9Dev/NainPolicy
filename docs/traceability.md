@@ -244,6 +244,15 @@ Suite `C` — `PolicyOperations.Client` Vitest (`npm test`, no browser).
 | `REQ-264` valid `robots.txt` | C | `ships a robots.txt that allows the whole site` |
 | Measured effect and absence of third-party font requests | — | Lighthouse and Playwright capture recorded in `docs/public-demo.md` (2026-11-03) |
 
+## Social preview card (spec 015 proposed)
+
+| Requirement | Suite | Test |
+|---|---|---|
+| `REQ-270` own-origin image with size and alternative text | C | `points the Open Graph and Twitter images at a card served from the own origin` |
+| `REQ-271` 1200 by 630 PNG | C | `ships the card at 1200 by 630 pixels` |
+| `REQ-272` locale and alternate | C | `declares the Spanish locale with English as the alternate` |
+| `REQ-271` (generation) `REQ-273` (claims) | — | `scripts/og-cover.cjs` and the card reviewed in `docs/public-demo.md` (2026-11-03) |
+
 ## Known gaps
 
 1. `OPS-006` has no end-to-end test. Closing it requires a fault-injection seam around the
