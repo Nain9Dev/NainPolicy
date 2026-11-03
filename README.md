@@ -191,6 +191,7 @@ SQL Server Standard Developer es gratuito para desarrollo/pruebas, pero no está
 - [Spec 006: recorrido guiado del blueprint](specs/006-guided-blueprint-walkthrough/spec.md)
 - [Spec 007: capa comercial y cliente bilingüe](specs/007-commercial-layer-and-locale/spec.md)
 - [Spec 008: modo práctica sin token](specs/008-practice-mode/spec.md)
+- [Spec 009: sandbox anónimo contra la API real (solo diseño)](specs/009-anonymous-sandbox/spec.md)
 - [ADR-001: product direction](docs/decisions/ADR-001-product-direction.md)
 - [ADR-002: runtime and architecture](docs/decisions/ADR-002-runtime-and-architecture.md)
 - [ADR-003: lifecycle and security](docs/decisions/ADR-003-lifecycle-security-and-organization-boundary.md)
@@ -199,6 +200,7 @@ SQL Server Standard Developer es gratuito para desarrollo/pruebas, pero no está
 - [ADR-006: free-tier resilience and demo evidence](docs/decisions/ADR-006-free-tier-resilience-and-demo-evidence.md) (aprobado)
 - [ADR-008: guided walkthrough and plain-language narration](docs/decisions/ADR-008-guided-walkthrough-and-plain-language-narration.md) (propuesto)
 - [ADR-009: commercial layer and bilingual client](docs/decisions/ADR-009-commercial-layer-and-bilingual-client.md) (propuesto)
+- [ADR-010: anonymous sandbox for hands-on practice](docs/decisions/ADR-010-anonymous-sandbox-for-hands-on-practice.md) (propuesto, solo diseño)
 
 ## Autor
 
