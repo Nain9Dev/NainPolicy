@@ -1,9 +1,26 @@
 # Public portfolio demo
 
-- Document version: 0.4
+- Document version: 0.5
 - Status: Active evidence
-- Date: 2026-10-22
-- Governing decisions: ADR-005, ADR-006 and ADR-007 (proposed)
+- Date: 2026-11-03
+- Governing decisions: ADR-005, ADR-006, ADR-007 and ADR-008 (proposed)
+
+## Client walkthrough, 2026-11-03
+
+Spec 006 added narration, a guided walkthrough, selectable layers and a stacked phone layout to the
+blueprint. Observed with Playwright and Chromium against the production build (`vite preview`),
+without a backend, so every run came from the in-browser fallback and was labelled `Simulated`:
+
+| Check | Observation |
+|---|---|
+| First screen at 1440 px | Full-width sheet with a start button over it; band below states what a run does; five planned steps dimmed in the rail; legend with four line states |
+| Run | Fast trace reaches step 5 within about 1 s, then the walkthrough restarts at step 1 and advances every 1.8 s; band shows `Step N of 5`, title, sentence, request, status, server time, version |
+| 5.2 s after the click | `Step 3 of 5 · Rejected as expected`, `A stale write is blocked`, red path Browser → API → Application, `412` burst, Domain stays `Active`, ledger keeps one row |
+| 9.2 s after the click | `Step 5 of 5`, walkthrough ended, button reads `Replay` |
+| Select a layer | Click on Application pauses the walkthrough, outlines it cyan, band shows its role and three responsibilities; `Back to the run` and `Escape` return to the step |
+| Keyboard | `ArrowLeft` from step 5 goes to step 4; five more presses stop at step 1; `ArrowRight` stops at step 5; inputs on other tabs are not intercepted |
+| Mobile 390 px | Stacked layout, document `scrollWidth` 390 (no horizontal scroll); nodes in one column, Domain and Infrastructure side by side; band, rail and legend stack; chips never overflow their box |
+| Reduced motion emulated | Trace lands directly on step 5; no walkthrough starts; no packets or flow; `Play`, arrows and keys still step |
 
 ## Client showcase, 2026-10-22
 

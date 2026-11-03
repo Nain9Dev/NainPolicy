@@ -1,8 +1,8 @@
 # Documentation map
 
-- Document version: 0.8
+- Document version: 0.9
 - Status: Active
-- Date: 2026-10-22
+- Date: 2026-11-03
 - Owner: Aitor Nain Mendoza Vallejo
 
 ## Purpose
@@ -55,6 +55,8 @@ If two approved sources conflict and neither has precedence, the affected work s
 | `specs/003-openapi-contract-test/` | OpenAPI contract evidence restored after the Scalar migration | 0.1 | Proposed | None |
 | `specs/004-prewarm-live-demo/` | Client wakes the free-tier database on load and bounds a live run to 6 s (partly amended by 005) | 0.1 | Proposed | None |
 | `specs/005-intent-warmup-cost-guard/` | Wake the database only on visitor intent, simulate while it wakes, replay in about 1 s, Azure cost-guard runbook | 0.1 | Proposed | None |
+| `docs/decisions/ADR-008-guided-walkthrough-and-plain-language-narration.md` | Plain-language narration, guided walkthrough, selectable layers, stacked phone layout | 0.1 | Proposed | None |
+| `specs/006-guided-blueprint-walkthrough/` | In-flight change implementing ADR-008 | 0.1 | Proposed | None |
 | `AGENTS.md` | Canonical constitution for agents and contributors | 0.1 | Active | None |
 | `SECURITY.md` | Vulnerability reporting and security posture | 0.1 | Active | None |
 

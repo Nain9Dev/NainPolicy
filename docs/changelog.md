@@ -7,6 +7,22 @@
 Relevant behavioural changes, newest first. Dates are the date the change was made, not released.
 A change is listed only when it alters behaviour, contracts, evidence or operating boundaries.
 
+## 0.15 — 2026-11-03 — Guided blueprint walkthrough
+
+Governing spec: 006 (`Proposed`); ADR-008 (`Proposed`). Client only; no API, contract or cost change.
+
+- Every blueprint step now has plain-language narration beside the diagram: title, one sentence
+  derived from the API step, and the measured evidence (method, path, status, duration, version).
+- After the fast trace of spec 005 (unchanged, about 1 s) a guided walkthrough shows one step every
+  1.8 s; it can be paused, resumed and stepped with on-screen arrows or the keyboard. Under reduced
+  motion it does not start by itself.
+- Every layer can be selected to read what it does and its responsibilities.
+- The blueprint geometry moved to a layout module with a wide and a stacked variant; phones no
+  longer scroll the sheet sideways.
+- A start button over the sheet, a connected step rail and a legend replace the control strip and
+  the five step cards. `Stale ETag` is now labelled `Stale version`.
+- 28 new client tests (71 in total).
+
 ## 0.14 — 2026-10-26 — Azure cost guard applied
 
 - Created the subscription budget `budget-nain-policy-1eur` (1 EUR a month; alerts at 50 % and 100 %

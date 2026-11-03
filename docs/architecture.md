@@ -1,9 +1,9 @@
 # Architecture
 
-- Document version: 0.8
+- Document version: 0.9
 - Status: Approved and implemented for the local and live public-demo boundaries
-- Date: 2026-10-22
-- Governing ADRs: ADR-002, ADR-003, ADR-005, ADR-006 and ADR-007 (proposed, client presentation)
+- Date: 2026-11-03
+- Governing ADRs: ADR-002, ADR-003, ADR-005, ADR-006, ADR-007 and ADR-008 (proposed, client presentation)
 
 ## Decision
 
@@ -25,12 +25,15 @@ JWT client / Scalar                  Anonymous portfolio visitor
 PolicyOperations.Domain.Tests      -> Domain
 PolicyOperations.Application.Tests -> Application (fakes, no database)
 PolicyOperations.IntegrationTests  -> API + Infrastructure + SQL Server
-PolicyOperations.Client (Vitest)   -> blueprint timeline and API source contract (no browser)
+PolicyOperations.Client (Vitest)   -> blueprint timeline, narration, walkthrough, layout and API source contract (no browser)
 ```
 
 The client is a presentation layer only. `architecture/blueprintTimeline.ts` turns the API's step
 list into frames (lit layers, domain state, ledger rows); `components/ArchitectureBlueprint.vue`
-paints one frame. The client never computes a business figure: every status, ETag and duration it
+paints one frame on the geometry of `architecture/blueprintLayout.ts` (a wide and a stacked
+layout). `architecture/narration.ts` derives the plain-language text of each frame and the guide of
+each layer; `architecture/walkthrough.ts` owns the reading pace and the bounded step navigation
+(ADR-008, proposed). The client never computes a business figure: every status, ETag and duration it
 shows comes from the API response, and a response produced by the in-browser fallback is labelled
 `Simulated` (ADR-007, proposed).
 

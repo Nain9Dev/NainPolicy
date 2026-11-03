@@ -1,8 +1,8 @@
 # Traceability
 
-- Document version: 0.2
+- Document version: 0.3
 - Status: Active
-- Date: 2026-10-22
+- Date: 2026-11-03
 - Scope: Approved rule identifier to the test that demonstrates it
 
 ## How to read this
@@ -163,7 +163,22 @@ Suite `C` — `PolicyOperations.Client` Vitest (`npm test`, no browser).
 | `REQ-112` CORS accepts `https://policy.naindev.com` | I | `PreflightFromPolicySubdomainIsAllowed` |
 | `REQ-113` client contract matches the API shape | C | `labels a 200 from the configured API as live and passes the response through unchanged` (typed against `PublicDemoRunResponse`; `vue-tsc` enforces the shape) |
 | `REQ-101` `REQ-105` `REQ-120` `REQ-121` `REQ-123` | — | Browser walkthrough recorded in `docs/public-demo.md` (2026-10-22) |
-| `REQ-122` reduced motion | — | **Gap.** Code path exists (`reducedMotion` prop skips packets); not emulated in a browser yet |
+| `REQ-122` reduced motion | — | Emulated in a browser on 2026-11-03 (spec 006 walkthrough): no packets, no flow, trace lands on the last step |
+
+## Client walkthrough (spec 006, ADR-008 proposed)
+
+| Requirement | Suite | Test |
+|---|---|---|
+| `REQ-151` step position, plain title, one explanation, evidence line | C | `states the step position, a plain-language title, one explanation and the evidence line`, `gives each of the five known operations its own title and explanation`, `marks the rejected step as such in the eyebrow…` |
+| `REQ-152` unknown operation falls back to label and HTTP outcome, never empty | C | `falls back to the label and the HTTP outcome for an unknown operation, never empty`, `explains a rejected unknown operation from its status code` |
+| `REQ-159` title at most 48 and explanation at most 240 characters | C | `keeps every title and explanation short enough for a phone panel` |
+| `REQ-150` idle narration names the five actions, synthetic data and no sign-up | C | `narrates the idle frame with the five things a run does and the synthetic, no sign-up boundary`; browser: overlay button and band observed |
+| `REQ-155` every node has a guide | C | `describes every node with a name, a one-line role and at least two responsibilities`; browser: selection by click and Enter observed |
+| `REQ-153` previous / next clamp at both ends; arrow keys | C | `moves forward one step and stops at the last`, `moves back one step and stops at the first`, `enters the first step from the idle position`; browser: ← → observed, bounded |
+| `REQ-154` walkthrough at least 1.2 s per step, pausable, slower than the trace | C | `advances at a readable pace of at least 1.2 s per step`, `shows the first step immediately…`, `is slower than the fast trace of spec 005…`; browser: auto-start after trace, Pause / Replay observed |
+| `REQ-156` stacked layout under 720 px, same nodes and edges, no overlap, edges on node borders | C | `uses the stacked layout under 720 px and the wide layout from 720 px`, `defines every node and every edge`, `never overlaps two nodes`, `starts and ends each edge on the boundary of the nodes it joins`; browser: 390 px has no horizontal scroll |
+| `REQ-157` legend | — | Browser walkthrough recorded in `docs/public-demo.md` (2026-11-03) |
+| `REQ-158` reduced motion: no flow, no auto walkthrough, stepping works | — | Browser walkthrough with `prefers-reduced-motion: reduce` emulated (2026-11-03) |
 
 ## Known gaps
 
