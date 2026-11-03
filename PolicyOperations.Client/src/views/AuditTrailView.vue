@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import SourceChip from '../components/SourceChip.vue';
+import ViewHeader from '../components/ViewHeader.vue';
 import { api, ApiError } from '../services/api';
-import type { PolicyTransitionResponse } from '../types/contracts';
+import type { PolicyTransitionResponse, ScenarioSource } from '../types/contracts';
 
 const props = defineProps<{
   token: string;
@@ -15,14 +17,16 @@ const policyIdInput = ref('');
 const transitions = ref<PolicyTransitionResponse[]>([]);
 const isLoading = ref(false);
 const errorFeedback = ref<string | null>(null);
+const source = ref<ScenarioSource | null>(null);
 
 async function fetchFromDemo() {
   isLoading.value = true;
   errorFeedback.value = null;
   try {
-    const run = await api.runPublicDemo();
-    policyIdInput.value = run.policy.id;
-    transitions.value = run.transitions;
+    const run = await api.runScenario();
+    source.value = run.source;
+    policyIdInput.value = run.response.policy.id;
+    transitions.value = run.response.transitions;
   } catch (err: unknown) {
     if (err instanceof ApiError) {
       errorFeedback.value = err.problem?.detail || err.message;
@@ -46,6 +50,7 @@ async function handleFetchCustom() {
   errorFeedback.value = null;
   try {
     const list = await api.listTransitions(policyIdInput.value.trim(), props.token);
+    source.value = 'live';
     transitions.value = list;
   } catch (err: unknown) {
     if (err instanceof ApiError) {
@@ -67,13 +72,16 @@ onMounted(() => {
 <template>
   <div class="audit-view">
     <!-- Header info card -->
-    <div class="glass-panel info-card">
-      <h2>Audit trail</h2>
-      <p class="description">Append-only <code>PolicyTransitions</code> · actor, reason, correlation id, UTC.</p>
+    <ViewHeader
+      eyebrow="Append-only ledger"
+      title="Every state change is on record"
+      lede="Each transition is stored with who did it, when, why and under which request. Rows are only ever added, never edited or deleted."
+    />
 
+    <div class="glass-panel info-card">
       <div class="search-bar">
         <div class="search-input-group">
-          <label>Policy Identifier (GUID):</label>
+          <label>Policy identifier (GUID)</label>
           <input
             v-model="policyIdInput"
             type="text"
@@ -88,7 +96,7 @@ onMounted(() => {
           :disabled="isLoading || !policyIdInput"
           @click="handleFetchCustom"
         >
-          Query Policy History
+          Read this policy's history
         </button>
 
         <button
@@ -98,7 +106,7 @@ onMounted(() => {
           @click="fetchFromDemo"
         >
           <span v-if="isLoading" class="spinner"></span>
-          <span>{{ isLoading ? 'Retrieving Ledger...' : 'Load Verified Demo Ledger' }}</span>
+          <span>{{ isLoading ? 'Loading…' : 'Load the demo ledger' }}</span>
         </button>
       </div>
     </div>
@@ -112,14 +120,14 @@ onMounted(() => {
     <div class="glass-panel timeline-panel">
       <div class="panel-header">
         <div>
-          <h3>Chronological Transition Sequence</h3>
-          <span class="sub-hint">Total recorded state mutations: {{ transitions.length }}</span>
+          <h3>Transitions, oldest first</h3>
+          <span class="sub-hint">{{ transitions.length }} recorded state changes</span>
         </div>
-        <span class="badge badge-emerald">Append-Only Verified</span>
+        <SourceChip v-if="source" :source="source" />
       </div>
 
       <div v-if="transitions.length === 0 && !isLoading" class="empty-timeline">
-        <p>No transition records found for the queried identifier.</p>
+        <p>No transitions recorded for this identifier.</p>
       </div>
 
       <div v-else class="timeline-container">
@@ -193,21 +201,6 @@ onMounted(() => {
   gap: 0.5rem;
   margin-bottom: 0.75rem;
   flex-wrap: wrap;
-}
-
-.info-card h2 {
-  font-family: var(--font-heading);
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin-bottom: 0.75rem;
-}
-
-.description {
-  color: var(--text-muted);
-  max-width: 840px;
-  line-height: 1.6;
-  font-size: 0.95rem;
-  margin-bottom: 1.5rem;
 }
 
 .search-bar {

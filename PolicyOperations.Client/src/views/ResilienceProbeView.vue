@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import ViewHeader from '../components/ViewHeader.vue';
 import { api } from '../services/api';
 import type { HealthCheckResult } from '../types/contracts';
 
@@ -60,10 +61,13 @@ async function probeReadiness() {
 <template>
   <div class="resilience-view">
     <!-- Header card -->
-    <div class="glass-panel info-card">
-      <h2>Resilience probe</h2>
-      <p class="description">Free tier with <code>AutoPause</code> · a cold wake-up is a <code>503 + Retry-After</code>, never a <code>500</code>.</p>
+    <ViewHeader
+      eyebrow="Free tier, honest errors"
+      title="A sleeping database is not a bug"
+      lede="The database pauses when idle to keep the cost at zero. Probing it while it wakes returns 503 with Retry-After, never a 500, so a client knows to wait rather than to fail."
+    />
 
+    <div class="glass-panel info-card">
       <div class="probe-actions">
         <button
           type="button"
@@ -72,7 +76,7 @@ async function probeReadiness() {
           @click="probeLiveness"
         >
           <span v-if="isProbingLiveness" class="spinner"></span>
-          <span>{{ isProbingLiveness ? 'Probing...' : 'Probe API Liveness (/health)' }}</span>
+          <span>{{ isProbingLiveness ? 'Asking…' : 'Is the API up?' }}</span>
         </button>
 
         <button
@@ -82,7 +86,7 @@ async function probeReadiness() {
           @click="probeReadiness"
         >
           <span v-if="isProbingReadiness" class="spinner"></span>
-          <span>{{ isProbingReadiness ? 'Connecting to SQL...' : 'Probe SQL Server Readiness (/health/ready)' }}</span>
+          <span>{{ isProbingReadiness ? 'Connecting to SQL Server…' : 'Is the database awake?' }}</span>
         </button>
       </div>
     </div>
@@ -92,7 +96,7 @@ async function probeReadiness() {
       <!-- Liveness Card -->
       <div class="glass-panel probe-card">
         <div class="card-head">
-          <h4>API Liveness</h4>
+          <h4>API process</h4>
           <span
             v-if="latestLiveness"
             :class="['badge', latestLiveness.status === 'Healthy' ? 'badge-emerald' : 'badge-rose']"
@@ -104,11 +108,11 @@ async function probeReadiness() {
         <p class="card-desc font-mono">GET /health</p>
 
         <div v-if="latestLiveness" class="metric-row">
-          <span class="label">Roundtrip Latency:</span>
+          <span class="label">Round trip</span>
           <span class="value font-mono">{{ latestLiveness.totalDurationMs }} ms</span>
         </div>
         <div v-if="latestLiveness" class="metric-row">
-          <span class="label">HTTP Status Code:</span>
+          <span class="label">HTTP status</span>
           <span class="value font-mono">{{ latestLiveness.statusCode }}</span>
         </div>
       </div>
@@ -116,7 +120,7 @@ async function probeReadiness() {
       <!-- Readiness Card -->
       <div class="glass-panel probe-card">
         <div class="card-head">
-          <h4>SQL Server Readiness</h4>
+          <h4>SQL Server connection</h4>
           <span
             v-if="latestReadiness"
             :class="['badge', latestReadiness.status === 'Healthy' ? 'badge-emerald' : 'badge-rose']"
@@ -128,11 +132,11 @@ async function probeReadiness() {
         <p class="card-desc font-mono">GET /health/ready · SELECT 1</p>
 
         <div v-if="latestReadiness" class="metric-row">
-          <span class="label">Roundtrip Latency:</span>
+          <span class="label">Round trip</span>
           <span class="value font-mono highlight">{{ latestReadiness.totalDurationMs }} ms</span>
         </div>
         <div v-if="latestReadiness" class="metric-row">
-          <span class="label">HTTP Status Code:</span>
+          <span class="label">HTTP status</span>
           <span class="value font-mono">{{ latestReadiness.statusCode }}</span>
         </div>
       </div>
@@ -141,7 +145,7 @@ async function probeReadiness() {
     <!-- Architectural Resilience Rules Grid -->
     <div class="glass-panel rules-panel">
       <div class="panel-header">
-        <h3>ADR-006</h3>
+        <h3>What the API promises (ADR-006)</h3>
         <span class="badge badge-emerald">Approved</span>
       </div>
 
@@ -149,28 +153,28 @@ async function probeReadiness() {
         <div class="rule-item">
           <div class="rule-number">01</div>
           <div class="rule-body">
-            <h4>Command timeout 60 s</h4>
+            <h4>Waits up to 60 s for a waking database</h4>
           </div>
         </div>
 
         <div class="rule-item">
           <div class="rule-number">02</div>
           <div class="rule-body">
-            <h4>503 + Retry-After</h4>
+            <h4>Answers 503 with Retry-After while it wakes</h4>
           </div>
         </div>
 
         <div class="rule-item">
           <div class="rule-number">03</div>
           <div class="rule-body">
-            <h4>Non-fatal cleanup</h4>
+            <h4>A failed cleanup never fails a run</h4>
           </div>
         </div>
 
         <div class="rule-item">
           <div class="rule-number">04</div>
           <div class="rule-body">
-            <h4>0.00 € budget</h4>
+            <h4>Runs on 0.00 € of infrastructure</h4>
           </div>
         </div>
       </div>
@@ -179,8 +183,8 @@ async function probeReadiness() {
     <!-- Telemetry History Log -->
     <div v-if="probeHistory.length > 0" class="glass-panel history-panel">
       <div class="panel-header">
-        <h3>Probe Execution History</h3>
-        <span class="sub-hint">{{ probeHistory.length }} recorded samples</span>
+        <h3>Probe history</h3>
+        <span class="sub-hint">{{ probeHistory.length }} {{ probeHistory.length === 1 ? 'sample' : 'samples' }} this session</span>
       </div>
 
       <div class="history-table-wrap">
@@ -188,9 +192,9 @@ async function probeReadiness() {
           <thead>
             <tr>
               <th>Time</th>
-              <th>Endpoint Probe</th>
+              <th>Probe</th>
               <th>Status</th>
-              <th>HTTP Code</th>
+              <th>HTTP</th>
               <th>Latency</th>
             </tr>
           </thead>
@@ -232,29 +236,6 @@ async function probeReadiness() {
   gap: 0.5rem;
   margin-bottom: 0.75rem;
   flex-wrap: wrap;
-}
-
-.info-card h2 {
-  font-family: var(--font-heading);
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin-bottom: 0.75rem;
-}
-
-.description {
-  color: var(--text-muted);
-  max-width: 840px;
-  line-height: 1.6;
-  font-size: 0.95rem;
-  margin-bottom: 1.5rem;
-}
-
-.description code {
-  background: rgba(255, 255, 255, 0.08);
-  padding: 0.15rem 0.4rem;
-  border-radius: var(--radius-sm);
-  color: #7dd3fc;
-  font-family: var(--font-mono);
 }
 
 .probe-actions {

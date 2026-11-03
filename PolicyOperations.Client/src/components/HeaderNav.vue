@@ -169,6 +169,11 @@ const tabs = [
     align-items: flex-start;
   }
 
+  .brand-text .eyebrow {
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+  }
+
   .actions {
     width: 100%;
   }

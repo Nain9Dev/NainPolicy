@@ -99,7 +99,7 @@ describe('buildTimeline', () => {
     expect(frames.map((f) => f.label)).toEqual([
       'Create draft',
       'Activate',
-      'Stale ETag',
+      'Stale version',
       'Cancel',
       'Audit trail',
     ]);

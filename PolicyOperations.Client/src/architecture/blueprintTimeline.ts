@@ -75,7 +75,7 @@ const GUARD_EDGES: EdgeId[] = ['client-api', 'api-application'];
 const LABELS: Record<string, string> = {
   create_draft: 'Create draft',
   activate_policy: 'Activate',
-  reject_stale_update: 'Stale ETag',
+  reject_stale_update: 'Stale version',
   cancel_policy: 'Cancel',
   read_audit_trail: 'Audit trail',
 };

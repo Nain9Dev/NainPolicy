@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import type { BlueprintLayout } from '../architecture/blueprintLayout';
+import { EDGE_IDS, NODE_IDS } from '../architecture/blueprintLayout';
+import { LAYER_GUIDE } from '../architecture/narration';
 import type { BlueprintFrame, EdgeId, NodeId } from '../architecture/blueprintTimeline';
 
 export type BlueprintPhase = 'idle' | 'waiting' | 'replaying' | 'done' | 'error';
@@ -9,41 +12,122 @@ const props = defineProps<{
   visitedNodes: NodeId[];
   phase: BlueprintPhase;
   reducedMotion: boolean;
+  layout: BlueprintLayout;
+  selectedNode: NodeId | null;
 }>();
 
-interface Box {
+const emit = defineEmits<{
+  (e: 'selectNode', id: NodeId): void;
+}>();
+
+const HOP_MS = 360;
+
+/* Technical chips per node. The plain-language line comes from LAYER_GUIDE. */
+const CHIPS: Partial<Record<NodeId, string[]>> = {
+  client: ['HTTPS · JSON', 'no token · no body'],
+  api: ['JWT · roles · org scope', 'ETag / If-Match', 'Problem Details', '429 · 503 + Retry-After'],
+  application: ['create / activate / cancel', 'one transaction per command'],
+  infrastructure: ['EF Core · rowversion', 'retry · 60 s timeout'],
+};
+
+const FOOTERS: Partial<Record<NodeId, string>> = {
+  client: 'policy.naindev.com',
+  api: '/api/v1 · OpenAPI',
+  application: 'framework-free',
+};
+
+const CHIP_H = 24;
+/** Approximate advance of one mono glyph at chip size, used only to choose one or two columns. */
+const CHAR_W = 6.2;
+const CHIP_GAP = 8;
+const PAD = 16;
+
+interface ChipBox {
   x: number;
   y: number;
   w: number;
-  h: number;
+  text: string;
 }
 
-const NODES: Record<NodeId, Box> = {
-  client: { x: 32, y: 196, w: 168, h: 128 },
-  api: { x: 272, y: 96, w: 192, h: 328 },
-  application: { x: 528, y: 96, w: 192, h: 328 },
-  domain: { x: 784, y: 48, w: 192, h: 184 },
-  infrastructure: { x: 784, y: 296, w: 192, h: 128 },
-  sql: { x: 1024, y: 72, w: 140, h: 380 },
-};
+function chipsFor(id: NodeId): ChipBox[] {
+  const texts = CHIPS[id] ?? [];
+  const box = props.layout.nodes[id];
+  const inner = box.w - PAD * 2;
+  const longest = texts.reduce((max, t) => Math.max(max, t.length), 0);
+  const cols = inner >= 300 && 2 * (longest * CHAR_W + 18) + CHIP_GAP <= inner ? 2 : 1;
+  const w = (inner - (cols - 1) * CHIP_GAP) / cols;
+  const top = box.y + 60;
+  return texts.map((text, i) => ({
+    x: box.x + PAD + (i % cols) * (w + CHIP_GAP),
+    y: top + Math.floor(i / cols) * (CHIP_H + CHIP_GAP),
+    w,
+    text,
+  }));
+}
 
-const EDGE_ORDER: EdgeId[] = [
-  'client-api',
-  'api-application',
-  'application-domain',
-  'application-infrastructure',
-  'infrastructure-sql',
+function chipsBottom(id: NodeId): number {
+  const chips = chipsFor(id);
+  if (chips.length === 0) return props.layout.nodes[id].y + 60;
+  return chips[chips.length - 1].y + CHIP_H;
+}
+
+const nodeChips = computed(() => Object.fromEntries(NODE_IDS.map((id) => [id, chipsFor(id)])) as Record<NodeId, ChipBox[]>);
+
+const guard = computed(() => {
+  const box = props.layout.nodes.application;
+  return { x: box.x + PAD, y: chipsBottom('application') + 14, w: box.w - PAD * 2, h: 54 };
+});
+
+const domainStates = ['Draft', 'Active', 'Cancelled'] as const;
+const stateIndex: Record<string, number> = { Draft: 0, Active: 1, Cancelled: 2 };
+
+const states = computed(() => {
+  const box = props.layout.nodes.domain;
+  return domainStates.map((state, i) => ({
+    state,
+    x: box.x + PAD,
+    y: box.y + 62 + i * 38,
+    w: box.w - PAD * 2,
+    h: 30,
+  }));
+});
+
+function stateClass(state: string) {
+  const current = stateIndex[props.frame.domainState];
+  const mine = stateIndex[state];
+  if (current === undefined) return 'state-off';
+  if (mine === current) return 'state-current';
+  if (mine < current) return 'state-visited';
+  return 'state-off';
+}
+
+const sqlGeom = computed(() => {
+  const b = props.layout.nodes.sql;
+  if (props.layout.id === 'wide') {
+    const cx = b.x + b.w / 2;
+    return {
+      cyl: { cx, cy: b.y + 22 },
+      title: { x: cx, y: b.y + 52, anchor: 'middle' as const },
+      tag: { x: cx, y: b.y + 70 },
+      policies: { x: b.x + 12, y: b.y + 92, w: b.w - 24 },
+      ledger: { x: b.x + 12, y: b.y + 184, w: b.w - 24 },
+      foot: { x: cx, y: b.y + 342, anchor: 'middle' as const },
+    };
+  }
+  return {
+    cyl: { cx: b.x + 42, cy: b.y + 26 },
+    title: { x: b.x + 76, y: b.y + 32, anchor: 'start' as const },
+    tag: { x: b.x + 76, y: b.y + 50 },
+    policies: { x: b.x + PAD, y: b.y + 72, w: 152 },
+    ledger: { x: b.x + 184, y: b.y + 72, w: 152 },
+    foot: { x: b.x + PAD, y: b.y + 166, anchor: 'start' as const },
+  };
+});
+
+const ledgerRows = [
+  { id: 1, text: 'Draft → Active' },
+  { id: 2, text: 'Active → Cancelled' },
 ];
-
-const EDGE_PATHS: Record<EdgeId, string> = {
-  'client-api': 'M200 260 H272',
-  'api-application': 'M464 260 H528',
-  'application-domain': 'M720 200 C756 200 748 140 784 140',
-  'application-infrastructure': 'M720 320 C756 320 748 360 784 360',
-  'infrastructure-sql': 'M976 360 H1024',
-};
-
-const HOP_MS = 360;
 
 const activeEdge = ref<EdgeId | null>(null);
 const packetRefs = ref<Record<string, SVGAnimateMotionElement | null>>({});
@@ -97,23 +181,7 @@ onBeforeUnmount(clearTimers);
 const isLit = (id: NodeId) => props.frame.litNodes.includes(id);
 const isVisited = (id: NodeId) => props.visitedNodes.includes(id);
 const edgeLit = (id: EdgeId) => props.frame.litEdges.includes(id);
-
-const stateIndex: Record<string, number> = { Draft: 0, Active: 1, Cancelled: 2 };
-const domainStates = ['Draft', 'Active', 'Cancelled'] as const;
-
-function stateClass(state: string) {
-  const current = stateIndex[props.frame.domainState];
-  const mine = stateIndex[state];
-  if (current === undefined) return 'state-off';
-  if (mine === current) return 'state-current';
-  if (mine < current) return 'state-visited';
-  return 'state-off';
-}
-
-const ledgerRows = computed(() => [
-  { id: 1, text: 'Draft → Active' },
-  { id: 2, text: 'Active → Cancelled' },
-]);
+const showFlow = computed(() => !props.reducedMotion && props.frame.index > 0);
 
 const versionLabel = computed(() => {
   const etag = props.frame.etag;
@@ -122,17 +190,46 @@ const versionLabel = computed(() => {
   return raw.length > 6 ? `…${raw.slice(-6)}` : raw;
 });
 
+function shortPath(path: string) {
+  return path.replace(/\/api\/v1/, '').replace(/[0-9a-f-]{36}/, '{id}');
+}
+
 const description = computed(() => {
   const f = props.frame;
   if (f.index === 0) {
-    return 'Request path from the client through the API, Application, Domain and Infrastructure layers to SQL Server. No run in progress.';
+    return 'Request path from the browser through the API, Application, Domain and Infrastructure layers to SQL Server. No run in progress. Each layer can be selected to read what it does.';
   }
   const where = f.tone === 'rejected' ? 'stopped at the concurrency guard in Application' : `reached ${f.litNodes[f.litNodes.length - 1]}`;
   return `Step ${f.index}, ${f.label}: ${f.method} ${f.path} returned ${f.status} in ${f.durationMs} ms and ${where}. Policy state ${f.domainState}, ${f.ledgerRows} audit rows.`;
 });
 
+const headerLabel = computed(() =>
+  props.layout.id === 'wide' ? 'NAINDEV ARCHITECTURAL BLUEPRINT // NAINPOLICY // CLEAN ARCHITECTURE' : 'NAINDEV BLUEPRINT // NAINPOLICY'
+);
+
+const readout = computed(() => {
+  if (props.phase === 'waiting') return 'REQUEST IN FLIGHT · WAKING FREE-TIER DATABASE';
+  const f = props.frame;
+  if (f.index > 0) return `STEP ${String(f.index).padStart(2, '0')} · ${f.method} ${shortPath(f.path)} · ${f.status} · ${f.durationMs} ms`;
+  return 'READY · RUN THE SCENARIO TO TRACE A REQUEST';
+});
+
+function nodeLabel(id: NodeId) {
+  const guide = LAYER_GUIDE[id];
+  const state = isLit(id) ? ', on the current request path' : '';
+  return `${guide.name}: ${guide.tagline}${state}. Select to read what it does.`;
+}
+
+function onNodeKey(event: KeyboardEvent, id: NodeId) {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    emit('selectNode', id);
+  }
+}
+
 const rootClass = computed(() => [
   'blueprint',
+  `layout-${props.layout.id}`,
   `tone-${props.frame.tone}`,
   `phase-${props.phase}`,
   { 'reduced-motion': props.reducedMotion },
@@ -142,7 +239,7 @@ const rootClass = computed(() => [
 <template>
   <svg
     :class="rootClass"
-    viewBox="0 0 1200 500"
+    :viewBox="`0 0 ${layout.width} ${layout.height}`"
     role="img"
     aria-labelledby="bp-title bp-desc"
     preserveAspectRatio="xMidYMid meet"
@@ -167,29 +264,57 @@ const rootClass = computed(() => [
           <feMergeNode in="SourceGraphic" />
         </feMerge>
       </filter>
+      <filter id="bp-glow-soft" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="10" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+      <linearGradient id="bp-node-fill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#0f2243" />
+        <stop offset="1" stop-color="#0a1628" />
+      </linearGradient>
+      <linearGradient id="bp-node-lit" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#15305a" />
+        <stop offset="1" stop-color="#0d1d3a" />
+      </linearGradient>
+      <radialGradient id="bp-spot" cx="50%" cy="50%" r="60%">
+        <stop offset="0" stop-color="#0d2a52" stop-opacity="0.9" />
+        <stop offset="1" stop-color="#060d1a" stop-opacity="0" />
+      </radialGradient>
     </defs>
 
     <!-- Sheet -->
-    <rect width="1200" height="500" fill="#060d1a" />
-    <rect width="1200" height="500" fill="url(#bp-grid)" opacity="0.7" />
-    <rect width="1200" height="500" fill="url(#bp-grid-major)" opacity="0.9" />
-    <rect x="12" y="12" width="1176" height="476" fill="none" stroke="#1e3a8a" stroke-width="1.5" rx="3" />
-    <line x1="12" y1="34" x2="1188" y2="34" stroke="#1b3b6f" stroke-width="1" stroke-dasharray="4 4" />
-    <text x="24" y="27" class="sheet-label">NAINDEV ARCHITECTURAL BLUEPRINT // NAINPOLICY // CLEAN ARCHITECTURE</text>
-    <text x="1176" y="27" class="sheet-meta" text-anchor="end">.NET 10 · EF CORE 10 · SQL SERVER · 52.0°</text>
+    <rect :width="layout.width" :height="layout.height" fill="#060d1a" />
+    <rect :width="layout.width" :height="layout.height" fill="url(#bp-spot)" />
+    <rect :width="layout.width" :height="layout.height" fill="url(#bp-grid)" opacity="0.7" />
+    <rect :width="layout.width" :height="layout.height" fill="url(#bp-grid-major)" opacity="0.9" />
+    <rect x="12" y="12" :width="layout.width - 24" :height="layout.height - 24" fill="none" stroke="#1e3a8a" stroke-width="1.5" rx="3" />
+    <line x1="12" y1="34" :x2="layout.width - 12" y2="34" stroke="#1b3b6f" stroke-width="1" stroke-dasharray="4 4" />
+    <text x="24" y="27" class="sheet-label">{{ headerLabel }}</text>
+    <text v-if="layout.id === 'wide'" :x="layout.width - 24" y="27" class="sheet-meta" text-anchor="end">.NET 10 · EF CORE 10 · SQL SERVER · 52.0°</text>
 
     <!-- Edges -->
     <g class="edges">
       <path
-        v-for="edge in EDGE_ORDER"
+        v-for="edge in EDGE_IDS"
         :key="edge"
-        :d="EDGE_PATHS[edge]"
+        :d="layout.edges[edge]"
         :class="['edge', `edge-${edge}`, { lit: edgeLit(edge), active: activeEdge === edge }]"
         marker-end="url(#bp-arrow)"
       />
-      <!-- Reverse path for the rejected 412 -->
+      <template v-if="showFlow">
+        <path
+          v-for="edge in EDGE_IDS.filter(edgeLit)"
+          :key="`flow-${edge}`"
+          :d="layout.edges[edge]"
+          class="edge-flow"
+        />
+      </template>
+      <!-- Reverse path for the rejected request -->
       <path
-        d="M528 300 H464"
+        :d="layout.rejectEdge"
         class="edge edge-reject"
         :class="{ lit: frame.guardHit }"
         marker-end="url(#bp-arrow)"
@@ -198,161 +323,111 @@ const rootClass = computed(() => [
 
     <!-- Packets -->
     <g class="packets">
-      <circle
-        v-for="edge in EDGE_ORDER"
+      <g
+        v-for="edge in EDGE_IDS"
         :key="`packet-${edge}`"
-        r="6"
         :class="['packet', { travelling: activeEdge === edge }]"
       >
+        <circle r="12" class="packet-halo" />
+        <circle r="5" class="packet-core" />
         <animateMotion
           :ref="(el) => setPacketRef(edge, el)"
-          :path="EDGE_PATHS[edge]"
+          :path="layout.edges[edge]"
           :dur="`${HOP_MS}ms`"
           begin="indefinite"
           fill="freeze"
           calcMode="spline"
           keySplines="0.3 0 0.2 1"
         />
-      </circle>
+      </g>
     </g>
 
-    <!-- Client -->
-    <g :class="['node', 'node-client', { lit: isLit('client'), visited: isVisited('client') }]">
-      <rect :x="NODES.client.x" :y="NODES.client.y" :width="NODES.client.w" :height="NODES.client.h" class="node-box" rx="3" />
-      <text :x="NODES.client.x + 16" :y="NODES.client.y + 30" class="node-title">Client</text>
-      <text :x="NODES.client.x + 16" :y="NODES.client.y + 56" class="node-sub">browser · fetch · JSON</text>
-      <text :x="NODES.client.x + 16" :y="NODES.client.y + 76" class="node-sub">no token · no body</text>
-      <text :x="NODES.client.x + 16" :y="NODES.client.y + 108" class="node-tag">policy.naindev.com</text>
-    </g>
+    <!-- Nodes -->
+    <g
+      v-for="id in NODE_IDS"
+      :key="id"
+      :class="['node', `node-${id}`, { lit: isLit(id), visited: isVisited(id), selected: selectedNode === id, guard: id === 'application' && frame.guardHit }]"
+      role="button"
+      tabindex="0"
+      :aria-label="nodeLabel(id)"
+      :aria-pressed="selectedNode === id"
+      @click="emit('selectNode', id)"
+      @keydown="onNodeKey($event, id)"
+    >
+      <rect :x="layout.nodes[id].x" :y="layout.nodes[id].y" :width="layout.nodes[id].w" :height="layout.nodes[id].h" class="node-box" rx="4" />
 
-    <!-- API -->
-    <g :class="['node', 'node-api', { lit: isLit('api'), visited: isVisited('api') }]">
-      <rect :x="NODES.api.x" :y="NODES.api.y" :width="NODES.api.w" :height="NODES.api.h" class="node-box" rx="3" />
-      <text :x="NODES.api.x + 16" :y="NODES.api.y + 30" class="node-title">API</text>
-      <text :x="NODES.api.x + 16" :y="NODES.api.y + 48" class="node-tag">PolicyOperations.Api</text>
+      <!-- SQL Server has its own header -->
+      <template v-if="id === 'sql'">
+        <ellipse :cx="sqlGeom.cyl.cx" :cy="sqlGeom.cyl.cy" rx="36" ry="9" class="cylinder" />
+        <text :x="sqlGeom.title.x" :y="sqlGeom.title.y" class="node-title" :text-anchor="sqlGeom.title.anchor">SQL Server</text>
+        <text :x="sqlGeom.tag.x" :y="sqlGeom.tag.y" class="node-plain" :text-anchor="sqlGeom.title.anchor">{{ LAYER_GUIDE.sql.tagline }}</text>
+      </template>
+      <template v-else>
+        <text :x="layout.nodes[id].x + PAD" :y="layout.nodes[id].y + 28" class="node-title">{{ LAYER_GUIDE[id].name }}</text>
+        <text :x="layout.nodes[id].x + PAD" :y="layout.nodes[id].y + 46" class="node-plain">{{ LAYER_GUIDE[id].tagline }}</text>
+      </template>
+
+      <!-- Chips -->
       <g class="chips">
-        <rect :x="NODES.api.x + 16" :y="NODES.api.y + 72" width="160" height="26" class="chip" rx="2" />
-        <text :x="NODES.api.x + 26" :y="NODES.api.y + 89" class="chip-text">JWT · roles · org scope</text>
-        <rect :x="NODES.api.x + 16" :y="NODES.api.y + 108" width="160" height="26" class="chip" rx="2" />
-        <text :x="NODES.api.x + 26" :y="NODES.api.y + 125" class="chip-text">ETag / If-Match</text>
-        <rect :x="NODES.api.x + 16" :y="NODES.api.y + 144" width="160" height="26" class="chip" rx="2" />
-        <text :x="NODES.api.x + 26" :y="NODES.api.y + 161" class="chip-text">Problem Details</text>
-        <rect :x="NODES.api.x + 16" :y="NODES.api.y + 180" width="160" height="26" class="chip" rx="2" />
-        <text :x="NODES.api.x + 26" :y="NODES.api.y + 197" class="chip-text">429 · 503 + Retry-After</text>
-      </g>
-      <text :x="NODES.api.x + 16" :y="NODES.api.y + 300" class="node-sub">/api/v1 · OpenAPI</text>
-    </g>
-
-    <!-- Application -->
-    <g :class="['node', 'node-application', { lit: isLit('application'), visited: isVisited('application'), guard: frame.guardHit }]">
-      <rect :x="NODES.application.x" :y="NODES.application.y" :width="NODES.application.w" :height="NODES.application.h" class="node-box" rx="3" />
-      <text :x="NODES.application.x + 16" :y="NODES.application.y + 30" class="node-title">Application</text>
-      <text :x="NODES.application.x + 16" :y="NODES.application.y + 48" class="node-tag">PolicyService · ports</text>
-      <g class="chips">
-        <rect :x="NODES.application.x + 16" :y="NODES.application.y + 72" width="160" height="26" class="chip" rx="2" />
-        <text :x="NODES.application.x + 26" :y="NODES.application.y + 89" class="chip-text">create / activate / cancel</text>
-        <rect :x="NODES.application.x + 16" :y="NODES.application.y + 108" width="160" height="26" class="chip" rx="2" />
-        <text :x="NODES.application.x + 26" :y="NODES.application.y + 125" class="chip-text">one UnitOfWork save</text>
-      </g>
-      <!-- Concurrency guard -->
-      <g class="guard-box">
-        <rect :x="NODES.application.x + 16" :y="NODES.application.y + 176" width="160" height="56" class="guard" rx="2" />
-        <text :x="NODES.application.x + 26" :y="NODES.application.y + 198" class="guard-title">concurrency guard</text>
-        <text :x="NODES.application.x + 26" :y="NODES.application.y + 218" class="guard-text">If-Match ≟ rowversion</text>
-      </g>
-      <g v-if="frame.guardHit" class="guard-burst">
-        <circle :cx="NODES.application.x + 176" :cy="NODES.application.y + 176" r="20" class="burst" />
-        <text :x="NODES.application.x + 176" :y="NODES.application.y + 181" class="burst-text" text-anchor="middle">412</text>
-      </g>
-      <text :x="NODES.application.x + 16" :y="NODES.application.y + 300" class="node-sub">no provider types</text>
-    </g>
-
-    <!-- Domain -->
-    <g :class="['node', 'node-domain', { lit: isLit('domain'), visited: isVisited('domain') }]">
-      <rect :x="NODES.domain.x" :y="NODES.domain.y" :width="NODES.domain.w" :height="NODES.domain.h" class="node-box" rx="3" />
-      <text :x="NODES.domain.x + 16" :y="NODES.domain.y + 30" class="node-title">Domain</text>
-      <text :x="NODES.domain.x + 16" :y="NODES.domain.y + 48" class="node-tag">lifecycle · invariants</text>
-      <g class="states">
-        <template v-for="(state, i) in domainStates" :key="state">
-          <rect
-            :x="NODES.domain.x + 16"
-            :y="NODES.domain.y + 64 + i * 38"
-            width="160"
-            height="28"
-            :class="['state', stateClass(state)]"
-            rx="2"
-          />
-          <text :x="NODES.domain.x + 26" :y="NODES.domain.y + 83 + i * 38" :class="['state-text', stateClass(state)]">
-            {{ state }}
-          </text>
-          <text
-            v-if="i < 2"
-            :x="NODES.domain.x + 170"
-            :y="NODES.domain.y + 83 + i * 38"
-            class="state-arrow"
-            text-anchor="end"
-          >
-            ↓
-          </text>
+        <template v-for="chip in nodeChips[id]" :key="chip.text">
+          <rect :x="chip.x" :y="chip.y" :width="chip.w" :height="CHIP_H" class="chip" rx="2" />
+          <text :x="chip.x + 9" :y="chip.y + 16" class="chip-text">{{ chip.text }}</text>
         </template>
       </g>
-    </g>
 
-    <!-- Infrastructure -->
-    <g :class="['node', 'node-infrastructure', { lit: isLit('infrastructure'), visited: isVisited('infrastructure') }]">
-      <rect :x="NODES.infrastructure.x" :y="NODES.infrastructure.y" :width="NODES.infrastructure.w" :height="NODES.infrastructure.h" class="node-box" rx="3" />
-      <text :x="NODES.infrastructure.x + 16" :y="NODES.infrastructure.y + 30" class="node-title">Infrastructure</text>
-      <text :x="NODES.infrastructure.x + 16" :y="NODES.infrastructure.y + 48" class="node-tag">EF Core 10</text>
-      <g class="chips">
-        <rect :x="NODES.infrastructure.x + 16" :y="NODES.infrastructure.y + 64" width="160" height="26" class="chip" rx="2" />
-        <text :x="NODES.infrastructure.x + 26" :y="NODES.infrastructure.y + 81" class="chip-text">rowversion predicate</text>
-        <rect :x="NODES.infrastructure.x + 16" :y="NODES.infrastructure.y + 96" width="160" height="22" class="chip" rx="2" />
-        <text :x="NODES.infrastructure.x + 26" :y="NODES.infrastructure.y + 111" class="chip-text">transient retry · 60 s</text>
-      </g>
-    </g>
+      <!-- Application: concurrency guard -->
+      <template v-if="id === 'application'">
+        <rect :x="guard.x" :y="guard.y" :width="guard.w" :height="guard.h" class="guard" rx="2" />
+        <text :x="guard.x + 10" :y="guard.y + 21" class="guard-title">concurrency guard</text>
+        <text :x="guard.x + 10" :y="guard.y + 41" class="guard-text">If-Match ≟ stored version</text>
+        <g v-if="frame.guardHit" class="guard-burst">
+          <circle :cx="guard.x + guard.w" :cy="guard.y" r="20" class="burst" />
+          <text :x="guard.x + guard.w" :y="guard.y + 5" class="burst-text" text-anchor="middle">412</text>
+        </g>
+      </template>
 
-    <!-- SQL Server -->
-    <g :class="['node', 'node-sql', { lit: isLit('sql'), visited: isVisited('sql') }]">
-      <rect :x="NODES.sql.x" :y="NODES.sql.y" :width="NODES.sql.w" :height="NODES.sql.h" class="node-box" rx="3" />
-      <ellipse :cx="NODES.sql.x + NODES.sql.w / 2" :cy="NODES.sql.y + 22" rx="44" ry="9" class="cylinder" />
-      <text :x="NODES.sql.x + NODES.sql.w / 2" :y="NODES.sql.y + 52" class="node-title" text-anchor="middle">SQL Server</text>
-      <text :x="NODES.sql.x + NODES.sql.w / 2" :y="NODES.sql.y + 70" class="node-tag" text-anchor="middle">Azure SQL · free</text>
-
-      <!-- Policies table -->
-      <g class="table">
-        <rect :x="NODES.sql.x + 12" :y="NODES.sql.y + 92" width="112" height="22" class="table-head" rx="2" />
-        <text :x="NODES.sql.x + 20" :y="NODES.sql.y + 107" class="table-title">Policies</text>
-        <rect :x="NODES.sql.x + 12" :y="NODES.sql.y + 114" width="112" height="48" class="table-body" />
-        <text :x="NODES.sql.x + 20" :y="NODES.sql.y + 132" class="table-cell">status {{ frame.domainState === 'None' ? '—' : frame.domainState }}</text>
-        <text :x="NODES.sql.x + 20" :y="NODES.sql.y + 152" class="table-cell">rowversion {{ versionLabel }}</text>
-      </g>
-
-      <!-- Transitions ledger -->
-      <g class="table ledger">
-        <rect :x="NODES.sql.x + 12" :y="NODES.sql.y + 184" width="112" height="22" class="table-head" rx="2" />
-        <text :x="NODES.sql.x + 20" :y="NODES.sql.y + 199" class="table-title">PolicyTransitions</text>
-        <rect :x="NODES.sql.x + 12" :y="NODES.sql.y + 206" width="112" height="94" class="table-body" />
-        <template v-for="row in ledgerRows" :key="row.id">
-          <g :class="['ledger-row', { present: frame.ledgerRows >= row.id }]">
-            <rect :x="NODES.sql.x + 16" :y="NODES.sql.y + 212 + (row.id - 1) * 30" width="104" height="24" class="ledger-cell" rx="2" />
-            <text :x="NODES.sql.x + 22" :y="NODES.sql.y + 228 + (row.id - 1) * 30" class="ledger-text">{{ row.text }}</text>
-          </g>
+      <!-- Domain: lifecycle states -->
+      <template v-if="id === 'domain'">
+        <template v-for="(s, i) in states" :key="s.state">
+          <rect :x="s.x" :y="s.y" :width="s.w" :height="s.h" :class="['state', stateClass(s.state)]" rx="3" />
+          <text :x="s.x + 10" :y="s.y + 20" :class="['state-text', stateClass(s.state)]">{{ s.state }}</text>
+          <text v-if="i < 2" :x="s.x + s.w - 10" :y="s.y + 20" class="state-arrow" text-anchor="end">↓</text>
         </template>
-        <text :x="NODES.sql.x + 20" :y="NODES.sql.y + 290" class="table-cell dim">append-only</text>
-      </g>
+      </template>
 
-      <text :x="NODES.sql.x + NODES.sql.w / 2" :y="NODES.sql.y + 340" class="node-sub" text-anchor="middle">1 transaction</text>
-      <text :x="NODES.sql.x + NODES.sql.w / 2" :y="NODES.sql.y + 358" class="node-sub" text-anchor="middle">policy + audit row</text>
+      <!-- SQL Server: tables -->
+      <template v-if="id === 'sql'">
+        <g class="table">
+          <rect :x="sqlGeom.policies.x" :y="sqlGeom.policies.y" :width="sqlGeom.policies.w" height="22" class="table-head" rx="2" />
+          <text :x="sqlGeom.policies.x + 8" :y="sqlGeom.policies.y + 15" class="table-title">Policies</text>
+          <rect :x="sqlGeom.policies.x" :y="sqlGeom.policies.y + 22" :width="sqlGeom.policies.w" height="48" class="table-body" />
+          <text :x="sqlGeom.policies.x + 8" :y="sqlGeom.policies.y + 40" class="table-cell">status {{ frame.domainState === 'None' ? '—' : frame.domainState }}</text>
+          <text :x="sqlGeom.policies.x + 8" :y="sqlGeom.policies.y + 60" class="table-cell">version {{ versionLabel }}</text>
+        </g>
+        <g class="table ledger">
+          <rect :x="sqlGeom.ledger.x" :y="sqlGeom.ledger.y" :width="sqlGeom.ledger.w" height="22" class="table-head" rx="2" />
+          <text :x="sqlGeom.ledger.x + 8" :y="sqlGeom.ledger.y + 15" class="table-title">PolicyTransitions</text>
+          <rect :x="sqlGeom.ledger.x" :y="sqlGeom.ledger.y + 22" :width="sqlGeom.ledger.w" height="94" class="table-body" />
+          <template v-for="row in ledgerRows" :key="row.id">
+            <g :class="['ledger-row', { present: frame.ledgerRows >= row.id }]">
+              <rect :x="sqlGeom.ledger.x + 4" :y="sqlGeom.ledger.y + 28 + (row.id - 1) * 30" :width="sqlGeom.ledger.w - 8" height="24" class="ledger-cell" rx="2" />
+              <text :x="sqlGeom.ledger.x + 10" :y="sqlGeom.ledger.y + 44 + (row.id - 1) * 30" class="ledger-text">{{ row.text }}</text>
+            </g>
+          </template>
+          <text :x="sqlGeom.ledger.x + 8" :y="sqlGeom.ledger.y + 106" class="table-cell dim">append-only</text>
+        </g>
+        <text :x="sqlGeom.foot.x" :y="sqlGeom.foot.y" class="node-sub" :text-anchor="sqlGeom.foot.anchor">1 transaction</text>
+        <text :x="sqlGeom.foot.x" :y="sqlGeom.foot.y + 18" class="node-sub" :text-anchor="sqlGeom.foot.anchor">policy + audit row</text>
+      </template>
+
+      <!-- Footer line -->
+      <text v-if="FOOTERS[id]" :x="layout.nodes[id].x + PAD" :y="layout.nodes[id].y + layout.nodes[id].h - 14" class="node-sub">{{ FOOTERS[id] }}</text>
     </g>
 
     <!-- Status readout -->
     <g class="readout">
-      <text x="24" y="478" class="sheet-meta">
-        <template v-if="phase === 'waiting'">REQUEST IN FLIGHT · WAKING FREE-TIER DATABASE</template>
-        <template v-else-if="frame.index > 0">STEP {{ String(frame.index).padStart(2, '0') }} · {{ frame.method }} {{ frame.path }} · {{ frame.status }} · {{ frame.durationMs }} ms</template>
-        <template v-else>READY · RUN THE SCENARIO TO TRACE A REQUEST</template>
-      </text>
-      <text x="1176" y="478" class="sheet-meta" text-anchor="end">SPEC-002 · SHEET 1/1</text>
+      <text x="24" :y="layout.height - 22" class="sheet-meta">{{ readout }}</text>
+      <text v-if="layout.id === 'wide'" :x="layout.width - 24" :y="layout.height - 22" class="sheet-meta" text-anchor="end">SPEC-006 · SHEET 1/1</text>
     </g>
   </svg>
 </template>
@@ -379,12 +454,23 @@ const rootClass = computed(() => [
 }
 
 /* Nodes */
+.node {
+  cursor: pointer;
+  outline: none;
+}
+
 .node-box {
-  fill: rgba(10, 22, 40, 0.92);
+  fill: url(#bp-node-fill);
   stroke: #1b3b6f;
   stroke-width: 1.2;
   stroke-dasharray: 6 4;
   transition: stroke 0.25s ease, fill 0.25s ease, filter 0.25s ease;
+}
+
+.node:hover .node-box,
+.node:focus-visible .node-box {
+  stroke: #3c5f94;
+  stroke-dasharray: none;
 }
 
 .node.visited .node-box {
@@ -395,12 +481,19 @@ const rootClass = computed(() => [
 .node.lit .node-box {
   stroke: var(--brand-green);
   stroke-dasharray: none;
-  fill: rgba(15, 34, 67, 0.96);
+  fill: url(#bp-node-lit);
   filter: url(#bp-glow);
 }
 
 .tone-rejected .node.lit .node-box {
   stroke: var(--brand-red);
+}
+
+.node.selected .node-box,
+.node:focus-visible .node-box {
+  stroke: var(--accent-cyan);
+  stroke-width: 2;
+  stroke-dasharray: none;
 }
 
 .node-title {
@@ -410,13 +503,14 @@ const rootClass = computed(() => [
   fill: #ffffff;
 }
 
-.node-tag {
-  font-size: 9.5px;
-  letter-spacing: 0.1em;
-  fill: var(--brand-green);
+.node-plain {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 600;
+  fill: #a8b8d0;
 }
 
-.node.lit .node-tag {
+.node.lit .node-plain {
   fill: var(--brand-green);
 }
 
@@ -467,6 +561,25 @@ const rootClass = computed(() => [
   stroke: var(--brand-red);
 }
 
+.edge-flow {
+  fill: none;
+  stroke: #d6ff8a;
+  stroke-width: 2;
+  stroke-dasharray: 6 12;
+  stroke-linecap: round;
+  opacity: 0.85;
+  animation: flow 1.1s linear infinite;
+  pointer-events: none;
+}
+
+.tone-rejected .edge-flow {
+  stroke: #ff7a8a;
+}
+
+@keyframes flow {
+  to { stroke-dashoffset: -18; }
+}
+
 .edge-reject {
   opacity: 0;
   stroke: var(--brand-red);
@@ -490,16 +603,30 @@ const rootClass = computed(() => [
 
 /* Packets */
 .packet {
-  fill: var(--brand-green);
   opacity: 0;
-  filter: url(#bp-glow);
+  pointer-events: none;
 }
 
 .packet.travelling {
   opacity: 1;
 }
 
-.tone-rejected .packet {
+.packet-core {
+  fill: #eaffc2;
+  filter: url(#bp-glow);
+}
+
+.packet-halo {
+  fill: var(--brand-green);
+  opacity: 0.35;
+  filter: url(#bp-glow-soft);
+}
+
+.tone-rejected .packet-core {
+  fill: #ffd6db;
+}
+
+.tone-rejected .packet-halo {
   fill: var(--brand-red);
 }
 
@@ -566,11 +693,12 @@ const rootClass = computed(() => [
 .state.state-current {
   fill: var(--brand-green);
   stroke: var(--brand-green);
+  filter: url(#bp-glow);
 }
 
 .state-text {
   font-family: var(--font-heading);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 700;
   fill: #64748b;
   transition: fill 0.3s ease;
@@ -649,9 +777,25 @@ const rootClass = computed(() => [
   fill: var(--brand-green);
 }
 
-/* Reduced motion: no travelling packets, instant states */
+/* Stacked layout: the sheet is narrower, so type scales up a little */
+.layout-stacked .node-title { font-size: 19px; }
+.layout-stacked .node-plain { font-size: 12.5px; }
+.layout-stacked .chip-text,
+.layout-stacked .table-cell,
+.layout-stacked .table-title,
+.layout-stacked .guard-title { font-size: 10.5px; }
+.layout-stacked .guard-text { font-size: 11.5px; }
+.layout-stacked .node-sub { font-size: 11px; }
+.layout-stacked .state-text { font-size: 14px; }
+.layout-stacked .ledger-text { font-size: 10px; }
+.layout-stacked .sheet-label,
+.layout-stacked .sheet-meta { font-size: 10px; }
+
+/* Reduced motion: no travelling packets, no flow, instant states */
 .reduced-motion .packet,
-.reduced-motion .phase-waiting .edge-client-api {
+.reduced-motion .edge-flow,
+.reduced-motion .phase-waiting .edge-client-api,
+.reduced-motion .burst {
   animation: none;
 }
 
@@ -661,9 +805,5 @@ const rootClass = computed(() => [
 .reduced-motion .ledger-row,
 .reduced-motion .guard {
   transition: none;
-}
-
-.reduced-motion .burst {
-  animation: none;
 }
 </style>
