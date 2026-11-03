@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import NextStep from '../components/NextStep.vue';
 import ViewHeader from '../components/ViewHeader.vue';
 import type { TabId } from '../architecture/tabRoute';
 import { useLocale } from '../i18n/locale';
 import { format } from '../i18n/messages';
 import { api } from '../services/api';
-import type { HealthCheckResult } from '../types/contracts';
+import type { HealthCheckResult, HealthOutcome } from '../types/contracts';
 
 const emit = defineEmits<{ (e: 'navigate', tab: TabId): void }>();
 const { t } = useLocale();
@@ -20,13 +20,32 @@ const latestReadiness = ref<HealthCheckResult | null>(null);
 interface ProbeLogEntry {
   id: string;
   target: 'liveness' | 'readiness';
-  status: 'Healthy' | 'Degraded' | 'Unhealthy';
+  outcome: HealthOutcome;
   statusCode: number;
   durationMs: number;
   timestamp: string;
 }
 
 const probeHistory = ref<ProbeLogEntry[]>([]);
+
+type Stage = 'asleep' | 'waking' | 'ready';
+
+/** The stage of the latest readiness answer; liveness alone says nothing about the database. */
+const stage = computed<Stage | null>(() => {
+  const r = latestReadiness.value;
+  if (!r) return null;
+  if (r.outcome === 'healthy') return 'ready';
+  if (r.outcome === 'waking') return 'waking';
+  return 'asleep';
+});
+
+const STAGES: Stage[] = ['asleep', 'waking', 'ready'];
+
+function badgeClass(outcome: HealthOutcome) {
+  if (outcome === 'healthy') return 'badge-emerald';
+  if (outcome === 'waking') return 'badge-amber';
+  return 'badge-rose';
+}
 
 async function probeLiveness() {
   isProbingLiveness.value = true;
@@ -36,7 +55,7 @@ async function probeLiveness() {
     probeHistory.value.unshift({
       id: Math.random().toString(36).slice(2, 9),
       target: 'liveness',
-      status: res.status,
+      outcome: res.outcome,
       statusCode: res.statusCode,
       durationMs: res.totalDurationMs,
       timestamp: new Date().toLocaleTimeString(),
@@ -54,7 +73,7 @@ async function probeReadiness() {
     probeHistory.value.unshift({
       id: Math.random().toString(36).slice(2, 9),
       target: 'readiness',
-      status: res.status,
+      outcome: res.outcome,
       statusCode: res.statusCode,
       durationMs: res.totalDurationMs,
       timestamp: new Date().toLocaleTimeString(),
@@ -94,17 +113,28 @@ async function probeReadiness() {
       </div>
     </div>
 
+    <!-- Backend stage, in plain language (REQ-233) -->
+    <section class="glass-panel stage-panel" :aria-label="t.resilience.stageTitle">
+      <h3 class="stage-title">{{ t.resilience.stageTitle }}</h3>
+      <ol class="stages">
+        <li v-for="s in STAGES" :key="s" :class="['stage', `stage-${s}`, { current: stage === s, untested: stage === null }]">
+          <span class="stage-dot" aria-hidden="true"></span>
+          <span class="stage-name">{{ t.resilience.stages[s] }}</span>
+          <span class="stage-hint">{{ t.resilience.stageHints[s] }}</span>
+          <span v-if="stage === s && s === 'waking' && latestReadiness?.retryAfterSeconds" class="stage-retry font-mono">{{ format(t.resilience.retryIn, { s: latestReadiness.retryAfterSeconds }) }}</span>
+        </li>
+      </ol>
+      <p v-if="stage === null" class="stage-untested">{{ t.resilience.untestedHint }}</p>
+    </section>
+
     <!-- Active Probe Cards -->
     <div class="probe-cards-grid">
       <!-- Liveness Card -->
       <div class="glass-panel probe-card">
         <div class="card-head">
           <h3 class="card-title">{{ t.resilience.apiProcess }}</h3>
-          <span
-            v-if="latestLiveness"
-            :class="['badge', latestLiveness.status === 'Healthy' ? 'badge-emerald' : 'badge-rose']"
-          >
-            {{ latestLiveness.status }}
+          <span v-if="latestLiveness" :class="['badge', badgeClass(latestLiveness.outcome)]">
+            {{ t.resilience.outcomes[latestLiveness.outcome] }}
           </span>
           <span v-else class="badge badge-slate">{{ t.resilience.untested }}</span>
         </div>
@@ -124,11 +154,8 @@ async function probeReadiness() {
       <div class="glass-panel probe-card">
         <div class="card-head">
           <h3 class="card-title">{{ t.resilience.dbConnection }}</h3>
-          <span
-            v-if="latestReadiness"
-            :class="['badge', latestReadiness.status === 'Healthy' ? 'badge-emerald' : 'badge-rose']"
-          >
-            {{ latestReadiness.status }}
+          <span v-if="latestReadiness" :class="['badge', badgeClass(latestReadiness.outcome)]">
+            {{ t.resilience.outcomes[latestReadiness.outcome] }}
           </span>
           <span v-else class="badge badge-slate">{{ t.resilience.untested }}</span>
         </div>
@@ -206,8 +233,8 @@ async function probeReadiness() {
               <td class="font-mono text-dim">{{ entry.timestamp }}</td>
               <td>{{ t.resilience[entry.target] }}</td>
               <td>
-                <span :class="['badge', entry.status === 'Healthy' ? 'badge-emerald' : 'badge-rose']">
-                  {{ entry.status }}
+                <span :class="['badge', badgeClass(entry.outcome)]">
+                  {{ t.resilience.outcomes[entry.outcome] }}
                 </span>
               </td>
               <td class="font-mono">{{ entry.statusCode }}</td>
@@ -224,6 +251,89 @@ async function probeReadiness() {
 </template>
 
 <style scoped>
+.stage-panel {
+  padding: 1.1rem 1.4rem;
+}
+
+.stage-title {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 0.9rem;
+}
+
+.stages {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: rgba(6, 13, 26, 0.5);
+  opacity: 0.55;
+  transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.stage.untested {
+  opacity: 0.85;
+}
+
+.stage.current {
+  opacity: 1;
+}
+
+.stage-asleep.current { border-color: var(--brand-red); }
+.stage-waking.current { border-color: var(--accent-amber); }
+.stage-ready.current { border-color: var(--brand-green); box-shadow: 0 0 18px rgba(128, 255, 0, 0.18); }
+
+.stage-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--grid-major);
+}
+
+.stage-asleep .stage-dot { background: var(--brand-red); }
+.stage-waking .stage-dot { background: var(--accent-amber); }
+.stage-ready .stage-dot { background: var(--brand-green); }
+
+.stage-name {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.stage-hint {
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: #cbd5e1;
+}
+
+.stage-retry {
+  font-size: 0.74rem;
+  color: #ffd27a;
+}
+
+.stage-untested {
+  margin-top: 0.75rem;
+  font-size: 0.86rem;
+  color: var(--text-dim);
+}
+
+@media (max-width: 760px) {
+  .stages {
+    grid-template-columns: 1fr;
+  }
+}
+
 .resilience-view {
   display: flex;
   flex-direction: column;

@@ -1,6 +1,6 @@
 # Traceability
 
-- Document version: 0.7
+- Document version: 0.8
 - Status: Active
 - Date: 2026-11-03
 - Scope: Approved rule identifier to the test that demonstrates it
@@ -222,6 +222,15 @@ Suite `C` — `PolicyOperations.Client` Vitest (`npm test`, no browser).
 | `REQ-221` (order) each tab points at the next, the last ends | C | `visits every tab exactly once, in display order`, `points each tab at the next one and ends after the last`, `numbers the steps from one` |
 | `REQ-220` `REQ-223` `REQ-224` keys in both locales | C | `defines exactly the same keys in both locales`, `leaves no string empty in either locale` |
 | `REQ-220` to `REQ-224` on screen | — | Browser walkthrough recorded in `docs/public-demo.md` (2026-11-03) |
+
+## Honest health probes (spec 011 proposed)
+
+| Requirement | Suite | Test |
+|---|---|---|
+| `REQ-230` 2xx is healthy with the round trip | C | `reports healthy on a 2xx with the measured round trip` |
+| `REQ-231` 503 is waking with Retry-After; other non-2xx is unhealthy | C | `reports waking on a 503 and reads Retry-After`, `reports unhealthy on any other non-2xx answer` |
+| `REQ-232` network failure is unreachable, never a stub | C | `reports unreachable when the network fails and never invents a healthy answer` |
+| `REQ-233` `REQ-234` stage strip and localized outcomes | — | Browser walkthrough recorded in `docs/public-demo.md` (2026-11-03) |
 | `REQ-158` reduced motion: no flow, no auto walkthrough, stepping works | — | Browser walkthrough with `prefers-reduced-motion: reduce` emulated (2026-11-03) |
 
 ## Known gaps
