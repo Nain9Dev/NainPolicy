@@ -148,6 +148,9 @@ export interface Messages {
     correlation: string;
     reason: string;
     id: string;
+    fromPractice: string;
+    fromRun: string;
+    emptyHint: string;
   };
   resilience: {
     apiUp: string;
@@ -458,6 +461,9 @@ const en: Messages = {
     correlation: 'correlation',
     reason: 'reason',
     id: 'id',
+    fromPractice: 'History of the policy you drove',
+    fromRun: 'History of your last run',
+    emptyHint: 'Run the scenario or drive a policy and its history appears here. You can also load the demo ledger.',
   },
   resilience: {
     apiUp: 'Is the API up?',
@@ -763,6 +769,9 @@ const es: Messages = {
     correlation: 'correlación',
     reason: 'motivo',
     id: 'id',
+    fromPractice: 'Historial de la póliza que has conducido',
+    fromRun: 'Historial de tu última ejecución',
+    emptyHint: 'Ejecuta el escenario o conduce una póliza y su historial aparecerá aquí. También puedes cargar el libro de la demo.',
   },
   resilience: {
     apiUp: '¿Está la API en pie?',

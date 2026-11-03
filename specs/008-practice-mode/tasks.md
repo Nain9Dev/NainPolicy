@@ -14,6 +14,7 @@
 | `T-804` | Audit tab reads a history without a token and labels the origin from the answer | `[A]` | Chip follows the result | Done |
 | `T-805` | Browser walkthrough, desktop and phone | `[A]` | Observations in `docs/public-demo.md` | Done |
 | `T-806` | Docs: changelog, traceability, registry, README row | `[A]` | Documents reference spec 008 | Done |
+| `T-808` | Page session store; Audit shows the driven policy or the last run first and never runs the demo on its own | `[A]` | `session.test.ts` green; browser walkthrough | Done |
 | `T-807` | Approve or reject spec 008 | `[H]` | Status updated by the owner | Pending |
 
 ## Session handoff
