@@ -38,6 +38,7 @@ without a backend, at 1440 px and 390 px:
 | Try with the old version | Sends the previous ETag; red notice `El servidor comparó la versión antigua con la almacenada y rechazó el cambio con 412. La póliza no cambió.`; inspector `Última respuesta · 412`, state still `Active` |
 | Cancel | `Póliza cancelada…`; `Última respuesta · 200`; state `Cancelled` |
 | Audit without a token | `Leer el historial de esta póliza` on the practised id returns the two transitions labelled `Simulada · en el navegador` |
+| Audit continuity | Fresh session: `#audit` makes no request and shows the hint. After a run: `Historial de tu última ejecución` with its two rows and origin chip, no new request. After driving a policy: `Historial de la póliza que has conducido` with its rows |
 | Phone 390 px | Same flow; no horizontal scroll after the panel headers were allowed to wrap |
 
 ## Accessibility audit, 2026-11-03

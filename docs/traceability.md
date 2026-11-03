@@ -212,6 +212,8 @@ Suite `C` — `PolicyOperations.Client` Vitest (`npm test`, no browser).
 | `REQ-193` token and network failure: simulated | C | `answers from the in-browser engine labelled simulated when the network fails with a token` |
 | `REQ-194` `REQ-195` Lifecycle usable without a token; stale-write action | — | Browser walkthrough recorded in `docs/public-demo.md` (2026-11-03) |
 | `REQ-196` Audit origin follows the answer | C | `labels a live transition list by its origin`; browser: simulated chip after a token-less read |
+| `REQ-197` continuity: Audit shows the driven policy or the last run first | C | `remembers the last policy driven by hand, latest wins, as a copy`, `remembers the last scenario run with its origin`, `forgets everything on demand`; browser: run → Audit shows two rows named as the last run; drive → Audit shows the driven policy |
+| `REQ-198` Audit never runs the demo on its own | — | Browser: opening `#audit` in a fresh session makes no request and shows the hint |
 | `REQ-158` reduced motion: no flow, no auto walkthrough, stepping works | — | Browser walkthrough with `prefers-reduced-motion: reduce` emulated (2026-11-03) |
 
 ## Known gaps

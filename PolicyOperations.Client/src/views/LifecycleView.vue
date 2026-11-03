@@ -5,6 +5,7 @@ import ViewHeader from '../components/ViewHeader.vue';
 import { useLocale } from '../i18n/locale';
 import { format } from '../i18n/messages';
 import { api, ApiError, type PolicyResult } from '../services/api';
+import { rememberPolicy } from '../services/session';
 import type { PolicyResponse, ScenarioSource } from '../types/contracts';
 
 const { t } = useLocale();
@@ -72,6 +73,7 @@ function accept(result: PolicyResult, status: number, message: string) {
   activateForm.value.ifMatch = result.etag || '';
   cancelForm.value.ifMatch = result.etag || '';
   successFeedback.value = message;
+  rememberPolicy({ id: result.policy.id, policyNumber: result.policy.policyNumber, status: result.policy.status, source: result.source });
 }
 
 function refuse(err: unknown) {
