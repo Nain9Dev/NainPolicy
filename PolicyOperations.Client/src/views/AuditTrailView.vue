@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import SourceChip from '../components/SourceChip.vue';
 import ViewHeader from '../components/ViewHeader.vue';
 import { useLocale } from '../i18n/locale';
 import { format } from '../i18n/messages';
 import { api, ApiError } from '../services/api';
+import { lastPolicy, lastRun, rememberRun } from '../services/session';
 import type { PolicyTransitionResponse, ScenarioSource } from '../types/contracts';
 
 const { t } = useLocale();
@@ -18,49 +19,68 @@ const transitions = ref<PolicyTransitionResponse[]>([]);
 const isLoading = ref(false);
 const errorFeedback = ref<string | null>(null);
 const source = ref<ScenarioSource | null>(null);
+const origin = ref<'practice' | 'run' | 'lookup' | null>(null);
 
+const listTitle = computed(() => {
+  if (origin.value === 'practice') return t.value.audit.fromPractice;
+  if (origin.value === 'run') return t.value.audit.fromRun;
+  return t.value.audit.listTitle;
+});
+
+function fail(err: unknown) {
+  errorFeedback.value = err instanceof ApiError ? err.problem?.detail || err.message : String(err);
+}
+
+/** Explicit: one real demo run, on the visitor's click only (REQ-198). */
 async function fetchFromDemo() {
   isLoading.value = true;
   errorFeedback.value = null;
   try {
     const run = await api.runScenario();
-    source.value = run.source;
-    policyIdInput.value = run.response.policy.id;
-    transitions.value = run.response.transitions;
+    rememberRun(run);
+    showRun();
   } catch (err: unknown) {
-    if (err instanceof ApiError) {
-      errorFeedback.value = err.problem?.detail || err.message;
-    } else {
-      errorFeedback.value = String(err);
-    }
+    fail(err);
   } finally {
     isLoading.value = false;
   }
 }
 
+function showRun() {
+  const run = lastRun.value;
+  if (!run) return;
+  origin.value = 'run';
+  source.value = run.source;
+  policyIdInput.value = run.response.policy.id;
+  transitions.value = run.response.transitions;
+}
+
 async function handleFetchCustom() {
-  if (!policyIdInput.value.trim()) return;
+  const id = policyIdInput.value.trim();
+  if (!id) return;
 
   isLoading.value = true;
   errorFeedback.value = null;
   try {
-    const result = await api.listTransitions(policyIdInput.value.trim(), props.token);
+    const result = await api.listTransitions(id, props.token);
+    origin.value = lastPolicy.value?.id === id ? 'practice' : 'lookup';
     source.value = result.source;
     transitions.value = result.transitions;
   } catch (err: unknown) {
-    if (err instanceof ApiError) {
-      errorFeedback.value = err.problem?.detail || err.message;
-    } else {
-      errorFeedback.value = String(err);
-    }
+    fail(err);
   } finally {
     isLoading.value = false;
   }
 }
 
 onMounted(() => {
-  // Load default transitions from demo
-  fetchFromDemo();
+  // Continuity (REQ-197): what the visitor just did comes first; no request is made on its own.
+  if (lastPolicy.value) {
+    policyIdInput.value = lastPolicy.value.id;
+    void handleFetchCustom();
+  } else if (lastRun.value) {
+    showRun();
+  }
 });
 </script>
 
@@ -111,14 +131,14 @@ onMounted(() => {
     <div class="glass-panel timeline-panel">
       <div class="panel-header">
         <div>
-          <h3>{{ t.audit.listTitle }}</h3>
+          <h3>{{ listTitle }}</h3>
           <span class="sub-hint">{{ format(t.audit.listHint, { n: transitions.length }) }}</span>
         </div>
         <SourceChip v-if="source" :source="source" />
       </div>
 
       <div v-if="transitions.length === 0 && !isLoading" class="empty-timeline">
-        <p>{{ t.audit.empty }}</p>
+        <p>{{ origin ? t.audit.empty : t.audit.emptyHint }}</p>
       </div>
 
       <div v-else class="timeline-container">

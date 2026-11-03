@@ -7,6 +7,18 @@
 Relevant behavioural changes, newest first. Dates are the date the change was made, not released.
 A change is listed only when it alters behaviour, contracts, evidence or operating boundaries.
 
+## 0.19 — 2026-11-03 — Continuity between tabs; the Audit tab no longer runs the demo by itself
+
+Spec 008, second pass. Client only.
+
+- A page session remembers the policy the visitor drove and the last scenario run. The Audit tab
+  opens on that policy's history (named `History of the policy you drove` / `History of your last
+  run`) without a new request; a live run's ledger is shown from the answer already received.
+- Opening the Audit tab no longer runs the demo on its own, which spent free quota per visit and
+  showed an unrelated policy. The demo runs only on the visitor's click; the empty state explains
+  what to do.
+- 4 new client tests (109 in total).
+
 ## 0.18 — 2026-11-03 — Accessibility: zero axe violations on every tab
 
 Closes the `REQ-123` gap of spec 002 with evidence. Client only.
