@@ -28,6 +28,8 @@ const currentEtag = ref<string | null>(null);
 const previousEtag = ref<string | null>(null);
 const source = ref<ScenarioSource | null>(null);
 const lastStatus = ref<number | null>(null);
+/** True once the visitor provoked the 412 on this policy; the closing card only claims what happened. */
+const staleTried = ref(false);
 const isLoading = ref(false);
 const errorFeedback = ref<string | null>(null);
 const successFeedback = ref<string | null>(null);
@@ -104,6 +106,7 @@ function handleCreatePolicy() {
   return run(async () => {
     const res = await api.createPolicy(createForm.value, props.token);
     previousEtag.value = null;
+    staleTried.value = false;
     accept(res, 201, format(t.value.lifecycle.msgCreated, { n: res.policy.policyNumber }));
     previousEtag.value = null;
   });
@@ -148,6 +151,7 @@ function handleStaleAttempt() {
     } catch (err: unknown) {
       if (err instanceof ApiError && err.status === 412) {
         lastStatus.value = 412;
+        staleTried.value = true;
         errorFeedback.value = t.value.lifecycle.staleExplained;
         return;
       }
@@ -208,7 +212,7 @@ function handleStaleAttempt() {
       <div class="done-text">
         <span class="eyebrow">{{ t.lifecycle.lastAnswer }} · {{ lastStatus }}</span>
         <h3 class="done-title">{{ t.lifecycle.doneTitle }}</h3>
-        <p class="done-body">{{ t.lifecycle.doneBody }}</p>
+        <p class="done-body">{{ staleTried ? t.lifecycle.doneBody : t.lifecycle.doneBodyNoStale }}</p>
       </div>
       <button type="button" class="btn btn-primary" @click="emit('navigate', 'audit')">{{ t.lifecycle.doneCta }} ›</button>
     </div>
