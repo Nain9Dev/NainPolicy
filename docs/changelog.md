@@ -7,6 +7,32 @@
 Relevant behavioural changes, newest first. Dates are the date the change was made, not released.
 A change is listed only when it alters behaviour, contracts, evidence or operating boundaries.
 
+## 0.16 — 2026-11-03 — Commercial layer and bilingual client
+
+Governing spec: 007 (`Proposed`); ADR-009 (`Proposed`). Client only; no API, contract or cost change.
+
+- A hero above the blueprint states the outcome, names the three protections and offers two
+  actions: run the live demo and talk to naindev (the existing services page). Four proof chips
+  link to verifiable facts only: live on Azure SQL, tests against a real SQL Server in CI,
+  zero-euro infrastructure, MIT source.
+- Below the blueprint, four problem cards (concurrent edits, who changed what, tenant isolation,
+  sleeping free database) link to the tab or test that proves each one, and an engagement band
+  closes the page with the method and the services page. No pricing, logos, testimonials or
+  analytics.
+- The client is bilingual: Spanish for Spanish browsers or a stored preference, English
+  otherwise, with a header toggle that persists. One typed catalogue holds every visitor-facing
+  string; narration, guides, headers, controls, legend and chips follow the locale. The Lifecycle
+  workbench forms keep English technical labels.
+- Tabs are addressable by hash (`#blueprint`, `#lifecycle`, `#concurrency`, `#audit`,
+  `#resilience`); a finished run can be copied as plain text; Open Graph and Twitter metadata are
+  set.
+- Second pass: the Concurrency tab draws the race as a track (two operators, one stored version,
+  Alpha's write advancing it, Beta's write stopped at the guard with `412`), with a stacked variant
+  on phones; the idle blueprint carries a faint pulse along the request route; the first proof chip
+  of the hero reflects the real database probe; the four secondary tabs are fully localized; and
+  the client tests and build now run in CI (`client-tests` job).
+- 27 new client tests (99 in total).
+
 ## 0.15 — 2026-11-03 — Guided blueprint walkthrough
 
 Governing spec: 006 (`Proposed`); ADR-008 (`Proposed`). Client only; no API, contract or cost change.

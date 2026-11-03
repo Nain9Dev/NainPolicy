@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import ViewHeader from '../components/ViewHeader.vue';
+import { useLocale } from '../i18n/locale';
+import { format } from '../i18n/messages';
 import { api, ApiError } from '../services/api';
 import type { PolicyResponse } from '../types/contracts';
+
+const { t } = useLocale();
 
 const props = defineProps<{
   token: string;
@@ -61,7 +65,7 @@ async function handleCreatePolicy() {
     currentEtag.value = res.etag;
     activateForm.value.ifMatch = res.etag || '';
     cancelForm.value.ifMatch = res.etag || '';
-    successFeedback.value = `Policy ${res.policy.policyNumber} created as a draft.`;
+    successFeedback.value = format(t.value.lifecycle.msgCreated, { n: res.policy.policyNumber });
   } catch (err: unknown) {
     if (err instanceof ApiError) {
       errorFeedback.value = err.problem?.detail || err.message;
@@ -92,11 +96,11 @@ async function handleActivatePolicy() {
     currentPolicy.value = res.policy;
     currentEtag.value = res.etag;
     cancelForm.value.ifMatch = res.etag || '';
-    successFeedback.value = `Policy is now active. The server issued a new version.`;
+    successFeedback.value = t.value.lifecycle.msgActive;
   } catch (err: unknown) {
     if (err instanceof ApiError) {
       if (err.status === 412) {
-        errorFeedback.value = `412 Precondition Failed: the version you sent is stale. Read the policy again.`;
+        errorFeedback.value = t.value.lifecycle.msgStale;
       } else {
         errorFeedback.value = err.problem?.detail || err.message;
       }
@@ -122,11 +126,11 @@ async function handleCancelPolicy() {
     );
     currentPolicy.value = res.policy;
     currentEtag.value = res.etag;
-    successFeedback.value = `Policy cancelled. The audit ledger has the record.`;
+    successFeedback.value = t.value.lifecycle.msgCancelled;
   } catch (err: unknown) {
     if (err instanceof ApiError) {
       if (err.status === 412) {
-        errorFeedback.value = `412 Precondition Failed: the version you sent is stale. Read the policy again.`;
+        errorFeedback.value = t.value.lifecycle.msgStale;
       } else {
         errorFeedback.value = err.problem?.detail || err.message;
       }
@@ -141,23 +145,19 @@ async function handleCancelPolicy() {
 
 <template>
   <div class="lifecycle-view">
-    <ViewHeader
-      eyebrow="Hands-on · needs a local token"
-      title="Drive one policy yourself"
-      lede="Create a draft, activate it and cancel it with your own requests. Every change must carry the current version, so a request built on an old one is refused."
-    />
+    <ViewHeader :eyebrow="t.views.lifecycle.eyebrow" :title="t.views.lifecycle.title" :lede="t.views.lifecycle.lede" />
 
     <!-- State machine -->
     <div class="glass-panel state-machine-panel">
       <div class="fsm-diagram">
         <div :class="['fsm-node', { current: isDraft, visited: isActive || isCancelled }]">
           <div class="fsm-dot"></div>
-          <span class="fsm-name">Draft</span>
-          <span class="fsm-desc">created, not yet in force</span>
+          <span class="fsm-name">{{ t.lifecycle.states.draft }}</span>
+          <span class="fsm-desc">{{ t.lifecycle.stateHints.draft }}</span>
         </div>
 
         <div class="fsm-arrow">
-          <span class="arrow-label">activate · If-Match</span>
+          <span class="arrow-label">{{ t.lifecycle.activateArrow }}</span>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="5" y1="12" x2="19" y2="12"></line>
             <polyline points="12 5 19 12 12 19"></polyline>
@@ -166,12 +166,12 @@ async function handleCancelPolicy() {
 
         <div :class="['fsm-node', { current: isActive, visited: isCancelled }]">
           <div class="fsm-dot"></div>
-          <span class="fsm-name">Active</span>
-          <span class="fsm-desc">in force</span>
+          <span class="fsm-name">{{ t.lifecycle.states.active }}</span>
+          <span class="fsm-desc">{{ t.lifecycle.stateHints.active }}</span>
         </div>
 
         <div class="fsm-arrow">
-          <span class="arrow-label">cancel · If-Match</span>
+          <span class="arrow-label">{{ t.lifecycle.cancelArrow }}</span>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="5" y1="12" x2="19" y2="12"></line>
             <polyline points="12 5 19 12 12 19"></polyline>
@@ -180,8 +180,8 @@ async function handleCancelPolicy() {
 
         <div :class="['fsm-node', { current: isCancelled }]">
           <div class="fsm-dot"></div>
-          <span class="fsm-name">Cancelled</span>
-          <span class="fsm-desc">final, cannot change again</span>
+          <span class="fsm-name">{{ t.lifecycle.states.cancelled }}</span>
+          <span class="fsm-desc">{{ t.lifecycle.stateHints.cancelled }}</span>
         </div>
       </div>
     </div>
@@ -195,10 +195,10 @@ async function handleCancelPolicy() {
         </svg>
       </div>
       <div class="notice-body">
-        <h4>This tab sends real requests with your own token</h4>
-        <p>A local JWT with <code>organization_id</code> and the role <code>PolicyOperator</code>. The Blueprint tab needs none.</p>
+        <h4>{{ t.lifecycle.tokenTitle }}</h4>
+        <p>{{ t.lifecycle.tokenBody }}</p>
         <button type="button" class="btn btn-primary config-btn" @click="emit('openTokenModal')">
-          Configure JWT
+          {{ t.lifecycle.configure }}
         </button>
       </div>
     </div>
@@ -217,19 +217,19 @@ async function handleCancelPolicy() {
       <div class="actions-column">
         <!-- Create Draft Card -->
         <div class="glass-panel form-card">
-          <h4>1 · Create a draft</h4>
+          <h4>{{ t.lifecycle.step1 }}</h4>
           <div class="form-group">
-            <label>Policy Number</label>
+            <label>{{ t.lifecycle.policyNumber }}</label>
             <input v-model="createForm.policyNumber" type="text" class="input-field" placeholder="SYNTH-POL-XXXX" />
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label>Insured Amount</label>
+              <label>{{ t.lifecycle.insuredAmount }}</label>
               <input v-model.number="createForm.insuredAmount" type="number" class="input-field" />
             </div>
             <div class="form-group">
-              <label>Currency</label>
+              <label>{{ t.lifecycle.currency }}</label>
               <select v-model="createForm.currency" class="input-field">
                 <option value="EUR">EUR (€)</option>
                 <option value="USD">USD ($)</option>
@@ -244,31 +244,31 @@ async function handleCancelPolicy() {
             :disabled="isLoading || !token"
             @click="handleCreatePolicy"
           >
-            Create draft
+            {{ t.lifecycle.createDraft }}
           </button>
         </div>
 
         <!-- Activate Policy Card -->
         <div class="glass-panel form-card" :class="{ disabled: !isDraft }">
-          <h4>2 · Activate it</h4>
+          <h4>{{ t.lifecycle.step2 }}</h4>
           <div class="form-group">
-            <label>Insured Party Reference</label>
+            <label>{{ t.lifecycle.insuredParty }}</label>
             <input v-model="activateForm.insuredPartyReference" type="text" class="input-field" :disabled="!isDraft" />
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label>Start Date</label>
+              <label>{{ t.lifecycle.startDate }}</label>
               <input v-model="activateForm.coverageStartDate" type="date" class="input-field" :disabled="!isDraft" />
             </div>
             <div class="form-group">
-              <label>End Date</label>
+              <label>{{ t.lifecycle.endDate }}</label>
               <input v-model="activateForm.coverageEndDate" type="date" class="input-field" :disabled="!isDraft" />
             </div>
           </div>
 
           <div class="form-group">
-            <label>If-Match (the version you read)</label>
+            <label>{{ t.lifecycle.ifMatch }}</label>
             <input v-model="activateForm.ifMatch" type="text" class="input-field font-mono" :disabled="!isDraft" />
           </div>
 
@@ -278,20 +278,20 @@ async function handleCancelPolicy() {
             :disabled="isLoading || !isDraft || !token"
             @click="handleActivatePolicy"
           >
-            Activate
+            {{ t.lifecycle.activate }}
           </button>
         </div>
 
         <!-- Cancel Policy Card -->
         <div class="glass-panel form-card" :class="{ disabled: !isActive }">
-          <h4>3 · Cancel it</h4>
+          <h4>{{ t.lifecycle.step3 }}</h4>
           <div class="form-group">
-            <label>Cancellation Reason</label>
+            <label>{{ t.lifecycle.reason }}</label>
             <input v-model="cancelForm.reason" type="text" class="input-field" :disabled="!isActive" />
           </div>
 
           <div class="form-group">
-            <label>If-Match (the version you read)</label>
+            <label>{{ t.lifecycle.ifMatch }}</label>
             <input v-model="cancelForm.ifMatch" type="text" class="input-field font-mono" :disabled="!isActive" />
           </div>
 
@@ -301,7 +301,7 @@ async function handleCancelPolicy() {
             :disabled="isLoading || !isActive || !token"
             @click="handleCancelPolicy"
           >
-            Cancel
+            {{ t.lifecycle.cancel }}
           </button>
         </div>
       </div>
@@ -310,48 +310,48 @@ async function handleCancelPolicy() {
       <div class="inspector-column">
         <div class="glass-panel inspector-card">
           <div class="panel-header">
-            <h3>The policy as the server sees it</h3>
+            <h3>{{ t.lifecycle.inspectorTitle }}</h3>
             <span v-if="currentPolicy" :class="['badge', isDraft ? 'badge-amber' : isActive ? 'badge-emerald' : 'badge-rose']">
               {{ currentPolicy.status }}
             </span>
           </div>
 
           <div v-if="!currentPolicy" class="empty-inspector">
-            <p>No policy yet.</p>
-            <p class="sub-text">Step 1 creates a draft.</p>
+            <p>{{ t.lifecycle.noPolicy }}</p>
+            <p class="sub-text">{{ t.lifecycle.noPolicyHint }}</p>
           </div>
 
           <div v-else class="inspector-details">
             <div class="detail-row">
-              <span class="detail-key">Identifier</span>
+              <span class="detail-key">{{ t.lifecycle.identifier }}</span>
               <span class="detail-val font-mono">{{ currentPolicy.id }}</span>
             </div>
             <div class="detail-row">
-              <span class="detail-key">Policy Number</span>
+              <span class="detail-key">{{ t.lifecycle.policyNumber }}</span>
               <span class="detail-val font-mono bold">{{ currentPolicy.policyNumber }}</span>
             </div>
             <div class="detail-row">
-              <span class="detail-key">Insured Amount</span>
+              <span class="detail-key">{{ t.lifecycle.amount }}</span>
               <span class="detail-val">{{ currentPolicy.insuredAmount }} {{ currentPolicy.currency }}</span>
             </div>
             <div class="detail-row">
-              <span class="detail-key">Current version (ETag)</span>
+              <span class="detail-key">{{ t.lifecycle.currentVersion }}</span>
               <span class="detail-val font-mono etag-pill">{{ currentEtag || 'N/A' }}</span>
             </div>
             <div class="detail-row">
-              <span class="detail-key">Stored rowversion</span>
+              <span class="detail-key">{{ t.lifecycle.storedRowversion }}</span>
               <span class="detail-val font-mono text-dim">{{ currentPolicy.version }}</span>
             </div>
             <div v-if="currentPolicy.insuredPartyReference" class="detail-row">
-              <span class="detail-key">Insured Party</span>
+              <span class="detail-key">{{ t.lifecycle.insuredPartyLabel }}</span>
               <span class="detail-val">{{ currentPolicy.insuredPartyReference }}</span>
             </div>
             <div v-if="currentPolicy.coverageStartDate" class="detail-row">
-              <span class="detail-key">Coverage Period</span>
+              <span class="detail-key">{{ t.lifecycle.coverage }}</span>
               <span class="detail-val">{{ currentPolicy.coverageStartDate }} → {{ currentPolicy.coverageEndDate }}</span>
             </div>
             <div class="detail-row">
-              <span class="detail-key">Created (UTC)</span>
+              <span class="detail-key">{{ t.lifecycle.created }}</span>
               <span class="detail-val font-mono text-dim">{{ currentPolicy.createdAtUtc }}</span>
             </div>
           </div>

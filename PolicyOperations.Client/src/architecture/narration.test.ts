@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { PublicDemoStepResponse } from '../types/contracts';
 import { buildTimeline, IDLE_FRAME, type NodeId } from './blueprintTimeline';
-import { describeSource, IDLE_NARRATION, LAYER_GUIDE, MAX_BODY_CHARS, MAX_TITLE_CHARS, narrate } from './narration';
+import { describeSource, IDLE_NARRATION, LAYER_GUIDE, layerGuide, MAX_BODY_CHARS, MAX_TITLE_CHARS, narrate } from './narration';
 
 const policyPath = '/api/v1/policies/9f1c7a52-0000-4000-8000-000000000001';
 
@@ -140,5 +140,44 @@ describe('describeSource (REQ-161)', () => {
   it('never calls a simulated result live, verified or real', () => {
     const text = describeSource('simulated');
     expect(`${text.label} ${text.title}`).not.toMatch(/\blive\b|verified|real/i);
+  });
+});
+
+describe('narration in Spanish (REQ-175, REQ-176)', () => {
+  const frames = buildTimeline(canonicalRun);
+
+  it('gives each known operation its own Spanish title within the bounds', () => {
+    const titles = frames.map((f) => narrate(f, frames.length, 'es').title);
+
+    expect(new Set(titles).size).toBe(5);
+    expect(titles[2]).toBe('Una escritura obsoleta es bloqueada');
+    for (const f of frames) {
+      const text = narrate(f, frames.length, 'es');
+      expect(text.title.length).toBeLessThanOrEqual(MAX_TITLE_CHARS);
+      expect(text.body.length).toBeLessThanOrEqual(MAX_BODY_CHARS);
+      expect(text.eyebrow).toMatch(/^Paso \d de 5/);
+    }
+  });
+
+  it('falls back in Spanish for an unknown operation', () => {
+    const [frame] = buildTimeline([step({ operation: 'renew_policy', status: 409, result: 'rejected_as_expected', errorCode: 'state_conflict' })]);
+    const text = narrate(frame, 1, 'es');
+
+    expect(text.body).toMatch(/409/);
+    expect(text.body).toMatch(/rechaz/i);
+  });
+
+  it('describes every layer in Spanish', () => {
+    for (const id of NODE_IDS) {
+      const guide = layerGuide('es')[id];
+      expect(guide.role.length).toBeGreaterThan(20);
+      expect(guide.responsibilities.length).toBeGreaterThanOrEqual(2);
+    }
+    expect(layerGuide('en')).toEqual(LAYER_GUIDE);
+  });
+
+  it('describes the source in Spanish', () => {
+    expect(describeSource('live', 'es').label).toBe('En vivo · SQL Server');
+    expect(describeSource('simulated', 'es').label).toBe('Simulada · en el navegador');
   });
 });

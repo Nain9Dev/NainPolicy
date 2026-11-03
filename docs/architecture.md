@@ -3,7 +3,7 @@
 - Document version: 0.9
 - Status: Approved and implemented for the local and live public-demo boundaries
 - Date: 2026-11-03
-- Governing ADRs: ADR-002, ADR-003, ADR-005, ADR-006, ADR-007 and ADR-008 (proposed, client presentation)
+- Governing ADRs: ADR-002, ADR-003, ADR-005, ADR-006, ADR-007, ADR-008 and ADR-009 (proposed, client presentation)
 
 ## Decision
 
@@ -33,7 +33,9 @@ list into frames (lit layers, domain state, ledger rows); `components/Architectu
 paints one frame on the geometry of `architecture/blueprintLayout.ts` (a wide and a stacked
 layout). `architecture/narration.ts` derives the plain-language text of each frame and the guide of
 each layer; `architecture/walkthrough.ts` owns the reading pace and the bounded step navigation
-(ADR-008, proposed). The client never computes a business figure: every status, ETag and duration it
+(ADR-008, proposed). `i18n/messages.ts` is the one typed catalogue of visitor-facing copy in
+Spanish and English; `i18n/locale.ts` picks and persists the locale (ADR-009, proposed). The client
+never computes a business figure: every status, ETag and duration it
 shows comes from the API response, and a response produced by the in-browser fallback is labelled
 `Simulated` (ADR-007, proposed).
 

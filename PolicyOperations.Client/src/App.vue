@@ -7,16 +7,32 @@ import LifecycleView from './views/LifecycleView.vue';
 import ConcurrencyLabView from './views/ConcurrencyLabView.vue';
 import AuditTrailView from './views/AuditTrailView.vue';
 import ResilienceProbeView from './views/ResilienceProbeView.vue';
+import { hashForTab, parseTabHash, type TabId } from './architecture/tabRoute';
+import { useLocale } from './i18n/locale';
 import { api } from './services/api';
+import { LINKS } from './services/links';
 import { armWarmOnIntent } from './services/warmIntent';
 
-const activeTab = ref('scenario');
+const { t } = useLocale();
+const activeTab = ref<TabId>(typeof window === 'undefined' ? 'scenario' : parseTabHash(window.location.hash));
 const token = ref('');
 const isTokenModalOpen = ref(false);
 
 let disarmWarm: (() => void) | null = null;
 
+function onHashChange() {
+  activeTab.value = parseTabHash(window.location.hash);
+}
+
+function selectTab(tab: TabId) {
+  activeTab.value = tab;
+  const hash = hashForTab(tab);
+  if (window.location.hash !== hash) history.replaceState(null, '', hash);
+  window.scrollTo({ top: 0 });
+}
+
 onMounted(() => {
+  window.addEventListener('hashchange', onHashChange);
   // Wake the free-tier database only once the visitor shows intent (spec 005).
   disarmWarm = armWarmOnIntent(() => void api.warmUp());
   const saved = localStorage.getItem('nainpolicy_dev_jwt');
@@ -25,7 +41,10 @@ onMounted(() => {
   }
 });
 
-onBeforeUnmount(() => disarmWarm?.());
+onBeforeUnmount(() => {
+  disarmWarm?.();
+  window.removeEventListener('hashchange', onHashChange);
+});
 
 watch(token, (newVal) => {
   if (newVal) {
@@ -40,13 +59,14 @@ watch(token, (newVal) => {
   <div class="app-layout">
     <div class="content-container">
       <HeaderNav
-        v-model:active-tab="activeTab"
+        :active-tab="activeTab"
+        @update:active-tab="selectTab"
         :has-token="Boolean(token)"
         @open-token-modal="isTokenModalOpen = true"
       />
 
       <main class="main-content">
-        <ScenarioView v-if="activeTab === 'scenario'" />
+        <ScenarioView v-if="activeTab === 'scenario'" @navigate="selectTab" />
         <LifecycleView
           v-else-if="activeTab === 'workbench'"
           :token="token"
@@ -65,14 +85,14 @@ watch(token, (newVal) => {
         <div class="footer-left">
           <span class="footer-brand font-heading">NainPolicy</span>
           <span class="footer-sep">·</span>
-          <span class="footer-meta font-mono">synthetic data · 0.00 € · MIT</span>
+          <span class="footer-meta font-mono">{{ t.footer.meta }}</span>
         </div>
         <div class="footer-right">
-          <a href="https://github.com/Nain9Dev/API-Gestion-Financiera/blob/main/docs/architecture.md" target="_blank" rel="noopener noreferrer" class="footer-link">Architecture</a>
+          <a :href="LINKS.architecture" target="_blank" rel="noopener noreferrer" class="footer-link">{{ t.footer.architecture }}</a>
           <span class="footer-sep">·</span>
-          <a href="https://github.com/Nain9Dev/API-Gestion-Financiera" target="_blank" rel="noopener noreferrer" class="footer-link">Source</a>
+          <a :href="LINKS.repository" target="_blank" rel="noopener noreferrer" class="footer-link">{{ t.footer.source }}</a>
           <span class="footer-sep">·</span>
-          <a href="https://naindev.com" target="_blank" rel="noopener noreferrer" class="footer-link highlight">naindev.com</a>
+          <a :href="LINKS.portfolio" target="_blank" rel="noopener noreferrer" class="footer-link highlight">naindev.com</a>
         </div>
       </footer>
     </div>

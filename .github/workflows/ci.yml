@@ -68,6 +68,32 @@ jobs:
             exit 1
           fi
 
+  client-tests:
+    name: Client build and tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: PolicyOperations.Client
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: PolicyOperations.Client/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run client tests
+        run: npm test
+
+      - name: Build client
+        run: npm run build
+
   sqlserver-tests:
     name: SQL Server integration and migration tests
     runs-on: ubuntu-latest

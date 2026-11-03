@@ -1,23 +1,39 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
+import ConcurrencyRace, { type RacePhase } from '../components/ConcurrencyRace.vue';
 import SourceChip from '../components/SourceChip.vue';
 import ViewHeader from '../components/ViewHeader.vue';
+import { useLocale } from '../i18n/locale';
+import { format } from '../i18n/messages';
+import { STACKED_MAX_WIDTH } from '../architecture/blueprintLayout';
 import { api, ApiError } from '../services/api';
 import type { PublicDemoRunResponse, ScenarioSource } from '../types/contracts';
 
+const { t } = useLocale();
+
 const isRunning = ref(false);
-const racePhase = ref<'idle' | 'read' | 'alpha_committed' | 'beta_rejected' | 'completed'>('idle');
+const racePhase = ref<RacePhase>('idle');
 const demoResult = ref<PublicDemoRunResponse | null>(null);
 const errorMessage = ref<string | null>(null);
 const source = ref<ScenarioSource | null>(null);
 
-const PHASE_TEXT: Record<typeof racePhase.value, string> = {
-  idle: 'Ready',
-  read: 'Both operators read the same policy',
-  alpha_committed: 'Alpha saved first; the version changed',
-  beta_rejected: 'Beta still holds the old version: refused with 412',
-  completed: 'Done: nothing was overwritten',
-};
+const reducedMotion = ref(false);
+const stacked = ref(typeof window !== 'undefined' && window.innerWidth < STACKED_MAX_WIDTH);
+let motionQuery: MediaQueryList | null = null;
+const onMotion = (e: MediaQueryListEvent) => (reducedMotion.value = e.matches);
+const onResize = () => (stacked.value = window.innerWidth < STACKED_MAX_WIDTH);
+
+onMounted(() => {
+  motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  reducedMotion.value = motionQuery.matches;
+  motionQuery.addEventListener('change', onMotion);
+  window.addEventListener('resize', onResize);
+});
+
+onBeforeUnmount(() => {
+  motionQuery?.removeEventListener('change', onMotion);
+  window.removeEventListener('resize', onResize);
+});
 
 // Simulated / real state for the two operators
 const sharedPolicyNumber = ref('SYNTH-CONCUR-2026');
@@ -40,7 +56,7 @@ async function runRaceSimulation() {
 
   try {
     // Step 1: Initial state read
-    await new Promise((r) => setTimeout(r, 600));
+    await new Promise((r) => setTimeout(r, 1100));
     racePhase.value = 'alpha_committed';
 
     // Step 2: Call the real backend demo scenario to get authoritative numbers and steps
@@ -72,10 +88,10 @@ async function runRaceSimulation() {
       };
     }
 
-    await new Promise((r) => setTimeout(r, 800));
+    await new Promise((r) => setTimeout(r, 1400));
     racePhase.value = 'beta_rejected';
 
-    await new Promise((r) => setTimeout(r, 800));
+    await new Promise((r) => setTimeout(r, 1200));
     racePhase.value = 'completed';
   } catch (err: unknown) {
     if (err instanceof ApiError) {
@@ -93,11 +109,7 @@ async function runRaceSimulation() {
 <template>
   <div class="concurrency-lab">
     <!-- Lab Explanation Card -->
-    <ViewHeader
-      eyebrow="Two operators, one policy"
-      title="Why a stale write is refused"
-      lede="Alpha and Beta read the same policy. Alpha saves first, so the stored version changes; Beta's request still carries the old version and gets a 412 instead of silently overwriting Alpha's work."
-    />
+    <ViewHeader :eyebrow="t.views.concurrency.eyebrow" :title="t.views.concurrency.title" :lede="t.views.concurrency.lede" />
 
     <div class="glass-panel info-card">
       <div class="lab-controls">
@@ -111,15 +123,19 @@ async function runRaceSimulation() {
           <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline>
           </svg>
-          <span>{{ isRunning ? 'Running the race…' : 'Run the race' }}</span>
+          <span>{{ isRunning ? t.race.running : t.race.run }}</span>
         </button>
 
         <span class="phase-indicator" role="status" aria-live="polite">
-          <strong>{{ PHASE_TEXT[racePhase] }}</strong>
+          <strong>{{ t.race.phases[racePhase] }}</strong>
         </span>
 
         <SourceChip v-if="source && racePhase === 'completed'" :source="source" />
       </div>
+    </div>
+
+    <div class="glass-panel track">
+      <ConcurrencyRace :phase="racePhase" :initial-etag="initialEtag" :new-etag="alphaUpdatedEtag" :reduced-motion="reducedMotion" :stacked="stacked" />
     </div>
 
     <!-- Error message if any -->
@@ -134,14 +150,14 @@ async function runRaceSimulation() {
         <div class="operator-header">
           <div class="avatar alpha-avatar">α</div>
           <div>
-            <h3>Operator Alpha</h3>
-            <span class="operator-role">underwriter · saves first</span>
+            <h3>{{ t.race.alpha.name }}</h3>
+            <span class="operator-role">{{ t.race.alpha.role }}</span>
           </div>
           <span
             v-if="racePhase === 'alpha_committed' || racePhase === 'completed'"
             class="badge badge-emerald"
           >
-            200 saved
+            {{ t.race.savedBadge }}
           </span>
         </div>
 
@@ -149,15 +165,15 @@ async function runRaceSimulation() {
           <div class="timeline-step">
             <span class="step-badge">1</span>
             <div class="step-text">
-              <strong>Reads the policy</strong> {{ sharedPolicyNumber }}
-              <div class="font-mono token-box">version {{ initialEtag }}</div>
+              <strong>{{ t.race.reads }}</strong> {{ sharedPolicyNumber }}
+              <div class="font-mono token-box">{{ format(t.race.holds, { etag: initialEtag }) }}</div>
             </div>
           </div>
 
           <div class="timeline-step" :class="{ active: racePhase === 'alpha_committed' || racePhase === 'completed' }">
             <span class="step-badge">2</span>
             <div class="step-text">
-              <strong>Activates it with that version</strong>
+              <strong>{{ t.race.alphaWrites }}</strong>
               <div class="font-mono request-sample">
                 POST /policies/activate<br />
                 If-Match: {{ initialEtag }}
@@ -168,10 +184,10 @@ async function runRaceSimulation() {
           <div class="timeline-step" :class="{ active: racePhase === 'alpha_committed' || racePhase === 'completed' }">
             <span class="step-badge">3</span>
             <div class="step-text">
-              <strong>Saved: the stored version moves on</strong>
+              <strong>{{ t.race.alphaSaved }}</strong>
               <div class="status-box text-emerald">
-                SQL Server assigns a new version.<br />
-                New ETag: <code>{{ alphaUpdatedEtag }}</code>
+                {{ t.race.alphaNewVersion }}<br />
+                ETag: <code>{{ alphaUpdatedEtag }}</code>
               </div>
             </div>
           </div>
@@ -186,14 +202,14 @@ async function runRaceSimulation() {
         <div class="operator-header">
           <div class="avatar beta-avatar">β</div>
           <div>
-            <h3>Operator Beta</h3>
-            <span class="operator-role">claims adjuster · arrives second</span>
+            <h3>{{ t.race.beta.name }}</h3>
+            <span class="operator-role">{{ t.race.beta.role }}</span>
           </div>
           <span
             v-if="racePhase === 'beta_rejected' || racePhase === 'completed'"
             class="badge badge-rose"
           >
-            412 refused
+            {{ t.race.refusedBadge }}
           </span>
         </div>
 
@@ -201,18 +217,18 @@ async function runRaceSimulation() {
           <div class="timeline-step">
             <span class="step-badge">1</span>
             <div class="step-text">
-              <strong>Reads the same policy</strong> {{ sharedPolicyNumber }}
-              <div class="font-mono token-box">version {{ initialEtag }}</div>
+              <strong>{{ t.race.reads }}</strong> {{ sharedPolicyNumber }}
+              <div class="font-mono token-box">{{ format(t.race.holds, { etag: initialEtag }) }}</div>
             </div>
           </div>
 
           <div class="timeline-step" :class="{ active: racePhase === 'beta_rejected' || racePhase === 'completed' }">
             <span class="step-badge">2</span>
             <div class="step-text">
-              <strong>Cancels it with the version it read</strong>
+              <strong>{{ t.race.betaWrites }}</strong>
               <div class="font-mono request-sample">
                 POST /policies/cancel<br />
-                If-Match: {{ betaAttemptEtag }} <span class="stale-tag">[STALE]</span>
+                If-Match: {{ betaAttemptEtag }} <span class="stale-tag">[{{ t.race.betaStale }}]</span>
               </div>
             </div>
           </div>
@@ -220,10 +236,10 @@ async function runRaceSimulation() {
           <div class="timeline-step" :class="{ active: racePhase === 'beta_rejected' || racePhase === 'completed' }">
             <span class="step-badge">3</span>
             <div class="step-text">
-              <strong>Refused: the version is stale</strong>
+              <strong>{{ t.race.betaRefused }}</strong>
               <div class="status-box text-rose">
                 HTTP 412 Precondition Failed.<br />
-                Beta must read again before changing anything.
+                {{ t.race.betaNext }}
               </div>
             </div>
           </div>
@@ -235,8 +251,8 @@ async function runRaceSimulation() {
     <div v-if="racePhase === 'beta_rejected' || racePhase === 'completed'" class="glass-panel payload-panel">
       <div class="panel-header">
         <div>
-          <h3>What Beta receives</h3>
-          <span class="sub-hint">Problem Details body (RFC 9457) returned with the 412</span>
+          <h3>{{ t.race.payloadTitle }}</h3>
+          <span class="sub-hint">{{ t.race.payloadHint }}</span>
         </div>
         <span class="badge badge-rose">412 Precondition Failed</span>
       </div>
@@ -287,6 +303,12 @@ async function runRaceSimulation() {
 .phase-indicator strong {
   color: #ffffff;
   font-weight: 600;
+}
+
+.track {
+  padding: 0;
+  overflow: hidden;
+  line-height: 0;
 }
 
 .error-card {
