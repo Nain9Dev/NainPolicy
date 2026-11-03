@@ -156,6 +156,14 @@ Production after zip deploy:
 The residual slowness is the Azure SQL free-tier resume after idle (about 1 to 2 minutes), which
 the offer does not allow removing. The page probes readiness and retries (ADR-006).
 
+## Azure `/demo/` page, 2026-11-03
+
+The server-rendered Spanish page was restyled on the blueprint identity and links to the guided
+client. Observed from a local static server (the API was not running, so the page showed its
+`waking` state): desktop 1440 px and phone 390 px without horizontal scroll; steps in plain
+language; `Recorrido guiado paso a paso` beside the run button. Not verified: the deployed page,
+which needs the API redeploy.
+
 ## Public contract
 
 ### Run the fixed scenario
