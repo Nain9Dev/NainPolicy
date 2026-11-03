@@ -7,6 +7,15 @@
 Relevant behavioural changes, newest first. Dates are the date the change was made, not released.
 A change is listed only when it alters behaviour, contracts, evidence or operating boundaries.
 
+## 0.21 — 2026-11-03 — Design of an anonymous sandbox (documents only)
+
+ADR-010 and spec 009 record, as `Proposed` and design only, how a prospect could drive a policy
+of their own against the real API without a token: a dedicated sandbox organization served by the
+existing application services, a closed allow-list with no free text, possession of the random
+identifier as the only key, per-client and global daily caps, 24-hour retention, disabled by
+default, and a measured seven-day trial before it may stay enabled. No code, no deployment and
+no cost change; the owner decides (`T-902`).
+
 ## 0.20 — 2026-11-03 — The Azure `/demo/` page follows the blueprint identity
 
 Static files of the API only (`wwwroot/demo`); no C# change, the CSP and the contract are untouched.
