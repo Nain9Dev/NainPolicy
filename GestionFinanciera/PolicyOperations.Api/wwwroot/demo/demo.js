@@ -27,11 +27,11 @@ const curlCommand = document.querySelector("#curl-command");
 const copyFeedback = document.querySelector("#copy-feedback");
 
 const stepLabels = new Map([
-  ["create_draft", "Crear Draft"],
-  ["activate_policy", "Activar póliza"],
-  ["reject_stale_update", "Rechazar ETag obsoleto"],
-  ["cancel_policy", "Cancelar póliza"],
-  ["read_audit_trail", "Leer auditoría"]
+  ["create_draft", "Se crea una póliza nueva (borrador)"],
+  ["activate_policy", "El borrador pasa a activo"],
+  ["reject_stale_update", "Se bloquea una escritura con versión antigua (412)"],
+  ["cancel_policy", "La póliza se cancela"],
+  ["read_audit_trail", "Se lee el historial de auditoría"]
 ]);
 
 let elapsedTimerId = null;

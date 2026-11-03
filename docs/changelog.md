@@ -7,6 +7,18 @@
 Relevant behavioural changes, newest first. Dates are the date the change was made, not released.
 A change is listed only when it alters behaviour, contracts, evidence or operating boundaries.
 
+## 0.20 — 2026-11-03 — The Azure `/demo/` page follows the blueprint identity
+
+Static files of the API only (`wwwroot/demo`); no C# change, the CSP and the contract are untouched.
+
+- Tokens of the server-rendered Spanish page now match the repository banner and the guided
+  client: navy grid, brand green action with the red offset on hover, hairline frames, square
+  corners. System fonts stay, as the CSP requires.
+- The five steps read in plain language (`Se bloquea una escritura con versión antigua (412)`
+  instead of `Rechazar ETag obsoleto`), in the page and in the script that fills them.
+- A `Recorrido guiado paso a paso` action links to `https://policy.naindev.com/`, the primary
+  showcase the portfolio points to.
+
 ## 0.19 — 2026-11-03 — Continuity between tabs; the Audit tab no longer runs the demo by itself
 
 Spec 008, second pass. Client only.
