@@ -1,6 +1,6 @@
 # Documentation map
 
-- Document version: 0.10
+- Document version: 0.11
 - Status: Active
 - Date: 2026-11-03
 - Owner: Aitor Nain Mendoza Vallejo
@@ -59,6 +59,7 @@ If two approved sources conflict and neither has precedence, the affected work s
 | `specs/006-guided-blueprint-walkthrough/` | In-flight change implementing ADR-008 | 0.1 | Proposed | None |
 | `docs/decisions/ADR-009-commercial-layer-and-bilingual-client.md` | Hero, problem cards and engagement band with verifiable claims; Spanish and English client | 0.1 | Proposed | None |
 | `specs/007-commercial-layer-and-locale/` | In-flight change implementing ADR-009 | 0.1 | Proposed | None |
+| `specs/008-practice-mode/` | Lifecycle workbench usable without a token; one origin rule for authorized operations | 0.1 | Proposed | None |
 | `AGENTS.md` | Canonical constitution for agents and contributors | 0.1 | Active | None |
 | `SECURITY.md` | Vulnerability reporting and security posture | 0.1 | Active | None |
 

@@ -8,6 +8,7 @@ import type {
   ProblemDetails,
   PublicDemoRunResponse,
   ScenarioRun,
+  ScenarioSource,
 } from '../types/contracts';
 import { mockPolicyEngine } from './mockPolicyEngine';
 import { emitScenarioTelemetry } from './telemetry';
@@ -44,6 +45,63 @@ const RUN_TIMEOUT_MS = 2_000;
 const WARM_GRACE_MS = 800;
 /** The free-tier database can need up to two minutes to resume (spec 004). */
 const WARM_UP_TIMEOUT_MS = 120_000;
+
+export interface PolicyResult {
+  policy: PolicyResponse;
+  etag: string | null;
+  source: ScenarioSource;
+}
+
+export interface TransitionsResult {
+  transitions: PolicyTransitionResponse[];
+  source: ScenarioSource;
+}
+
+function authHeaders(token: string, json = false): Record<string, string> {
+  return {
+    Accept: 'application/json',
+    Authorization: `Bearer ${token.trim()}`,
+    ...(json ? { 'Content-Type': 'application/json' } : {}),
+  };
+}
+
+function quoted(etag: string): string {
+  return etag.startsWith('"') ? etag : `"${etag}"`;
+}
+
+async function readPolicy(res: Response): Promise<{ policy: PolicyResponse; etag: string | null }> {
+  return { policy: (await res.json()) as PolicyResponse, etag: res.headers.get('ETag') };
+}
+
+async function problemOf(res: Response): Promise<ApiError> {
+  let problem: ProblemDetails | undefined;
+  try {
+    problem = (await res.json()) as ProblemDetails;
+  } catch {
+    // No body or not JSON: the status alone is the answer.
+  }
+  return new ApiError(res.status, problem);
+}
+
+/**
+ * Origin rules of an authorized policy operation (spec 008):
+ * - no token: the in-browser engine answers, labelled `simulated`, and the API is not contacted;
+ * - token and a 2xx: the API's answer, labelled `live`;
+ * - token and any other status: the API's refusal is thrown as `ApiError`; never a fallback;
+ * - token and a network failure: the in-browser engine answers, labelled `simulated`.
+ */
+async function operate<T>(token: string, send: () => Promise<Response>, read: (res: Response) => Promise<T>, offline: () => T): Promise<T & { source: ScenarioSource }> {
+  if (!token.trim()) return { ...offline(), source: 'simulated' };
+
+  let res: Response;
+  try {
+    res = await send();
+  } catch {
+    return { ...offline(), source: 'simulated' };
+  }
+  if (!res.ok) throw await problemOf(res);
+  return { ...(await read(res)), source: 'live' };
+}
 
 export type WarmState = 'pending' | 'ready' | 'unavailable';
 
@@ -169,144 +227,63 @@ export const api = {
     return mockPolicyEngine.probeHealth(endpoint);
   },
 
-  /**
-   * Policy retrieval returning policy and ETag header.
-   */
-  async getPolicy(policyId: string, token: string): Promise<{ policy: PolicyResponse; etag: string | null }> {
-    try {
-      const res = await fetch(`${BASE_URL}/api/v1/policies/${policyId}`, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          Authorization: `Bearer ${token.trim()}`,
-        },
-      });
-
-      if (res.ok) {
-        const etag = res.headers.get('ETag');
-        const policy: PolicyResponse = await res.json();
-        return { policy, etag };
-      }
-    } catch {
-      // Standalone execution
-    }
-
-    return mockPolicyEngine.getPolicy(policyId);
+  /** Reads one policy; see `operate` for the origin rules (spec 008). */
+  getPolicy(policyId: string, token: string): Promise<PolicyResult> {
+    return operate(
+      token,
+      () => fetch(`${BASE_URL}/api/v1/policies/${policyId}`, { method: 'GET', headers: authHeaders(token) }),
+      readPolicy,
+      () => mockPolicyEngine.getPolicy(policyId)
+    );
   },
 
-  /**
-   * Audit transitions retrieval.
-   */
-  async listTransitions(policyId: string, token: string): Promise<PolicyTransitionResponse[]> {
-    try {
-      const res = await fetch(`${BASE_URL}/api/v1/policies/${policyId}/transitions`, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          Authorization: `Bearer ${token.trim()}`,
-        },
-      });
-
-      if (res.ok) {
-        return await res.json();
-      }
-    } catch {
-      // Standalone execution
-    }
-
-    return mockPolicyEngine.listTransitions(policyId);
+  /** Reads the transition ledger of one policy. */
+  listTransitions(policyId: string, token: string): Promise<TransitionsResult> {
+    return operate(
+      token,
+      () => fetch(`${BASE_URL}/api/v1/policies/${policyId}/transitions`, { method: 'GET', headers: authHeaders(token) }),
+      async (res) => ({ transitions: (await res.json()) as PolicyTransitionResponse[] }),
+      () => ({ transitions: mockPolicyEngine.listTransitions(policyId) })
+    );
   },
 
-  /**
-   * Create Draft policy.
-   */
-  async createPolicy(req: CreatePolicyRequest, token: string): Promise<{ policy: PolicyResponse; etag: string | null }> {
-    try {
-      const res = await fetch(`${BASE_URL}/api/v1/policies`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Authorization: `Bearer ${token.trim()}`,
-        },
-        body: JSON.stringify(req),
-      });
-
-      if (res.ok) {
-        const etag = res.headers.get('ETag');
-        const policy: PolicyResponse = await res.json();
-        return { policy, etag };
-      }
-    } catch {
-      // Standalone execution
-    }
-
-    return mockPolicyEngine.createPolicy(req);
+  /** Creates a Draft policy. */
+  createPolicy(req: CreatePolicyRequest, token: string): Promise<PolicyResult> {
+    return operate(
+      token,
+      () => fetch(`${BASE_URL}/api/v1/policies`, { method: 'POST', headers: authHeaders(token, true), body: JSON.stringify(req) }),
+      readPolicy,
+      () => mockPolicyEngine.createPolicy(req)
+    );
   },
 
-  /**
-   * Activate Policy with required If-Match header.
-   */
-  async activatePolicy(
-    policyId: string,
-    req: ActivatePolicyRequest,
-    ifMatch: string,
-    token: string
-  ): Promise<{ policy: PolicyResponse; etag: string | null }> {
-    try {
-      const res = await fetch(`${BASE_URL}/api/v1/policies/${policyId}/activate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          'If-Match': ifMatch.startsWith('"') ? ifMatch : `"${ifMatch}"`,
-          Authorization: `Bearer ${token.trim()}`,
-        },
-        body: JSON.stringify(req),
-      });
-
-      if (res.ok) {
-        const etag = res.headers.get('ETag');
-        const policy: PolicyResponse = await res.json();
-        return { policy, etag };
-      }
-    } catch {
-      // Standalone execution
-    }
-
-    return mockPolicyEngine.activatePolicy(policyId, req, ifMatch);
+  /** Activates a Draft; `If-Match` must carry the version the caller read. */
+  activatePolicy(policyId: string, req: ActivatePolicyRequest, ifMatch: string, token: string): Promise<PolicyResult> {
+    return operate(
+      token,
+      () =>
+        fetch(`${BASE_URL}/api/v1/policies/${policyId}/activate`, {
+          method: 'POST',
+          headers: { ...authHeaders(token, true), 'If-Match': quoted(ifMatch) },
+          body: JSON.stringify(req),
+        }),
+      readPolicy,
+      () => mockPolicyEngine.activatePolicy(policyId, req, ifMatch)
+    );
   },
 
-  /**
-   * Cancel Policy with required If-Match header.
-   */
-  async cancelPolicy(
-    policyId: string,
-    req: CancelPolicyRequest,
-    ifMatch: string,
-    token: string
-  ): Promise<{ policy: PolicyResponse; etag: string | null }> {
-    try {
-      const res = await fetch(`${BASE_URL}/api/v1/policies/${policyId}/cancel`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          'If-Match': ifMatch.startsWith('"') ? ifMatch : `"${ifMatch}"`,
-          Authorization: `Bearer ${token.trim()}`,
-        },
-        body: JSON.stringify(req),
-      });
-
-      if (res.ok) {
-        const etag = res.headers.get('ETag');
-        const policy: PolicyResponse = await res.json();
-        return { policy, etag };
-      }
-    } catch {
-      // Standalone execution
-    }
-
-    return mockPolicyEngine.cancelPolicy(policyId, req, ifMatch);
+  /** Cancels a Draft or Active policy; `If-Match` must carry the version the caller read. */
+  cancelPolicy(policyId: string, req: CancelPolicyRequest, ifMatch: string, token: string): Promise<PolicyResult> {
+    return operate(
+      token,
+      () =>
+        fetch(`${BASE_URL}/api/v1/policies/${policyId}/cancel`, {
+          method: 'POST',
+          headers: { ...authHeaders(token, true), 'If-Match': quoted(ifMatch) },
+          body: JSON.stringify(req),
+        }),
+      readPolicy,
+      () => mockPolicyEngine.cancelPolicy(policyId, req, ifMatch)
+    );
   },
 };

@@ -13,10 +13,6 @@ const props = defineProps<{
   token: string;
 }>();
 
-const emit = defineEmits<{
-  (e: 'openTokenModal'): void;
-}>();
-
 const policyIdInput = ref('');
 const transitions = ref<PolicyTransitionResponse[]>([]);
 const isLoading = ref(false);
@@ -45,17 +41,12 @@ async function fetchFromDemo() {
 async function handleFetchCustom() {
   if (!policyIdInput.value.trim()) return;
 
-  if (!props.token) {
-    emit('openTokenModal');
-    return;
-  }
-
   isLoading.value = true;
   errorFeedback.value = null;
   try {
-    const list = await api.listTransitions(policyIdInput.value.trim(), props.token);
-    source.value = 'live';
-    transitions.value = list;
+    const result = await api.listTransitions(policyIdInput.value.trim(), props.token);
+    source.value = result.source;
+    transitions.value = result.transitions;
   } catch (err: unknown) {
     if (err instanceof ApiError) {
       errorFeedback.value = err.problem?.detail || err.message;
@@ -252,6 +243,8 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
   margin-bottom: 1.5rem;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);

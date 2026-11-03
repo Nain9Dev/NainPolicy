@@ -26,6 +26,20 @@ build (`vite preview`), without a backend, so every run was labelled `Simulated`
 | Hero proof state | After pointer intent without a backend the first chip turns red with the simulated-origin title; it would turn amber while waking and green when ready |
 | Secondary tabs in Spanish | Lifecycle, Concurrency, Audit and Resilience render every label, button, phase and message in Spanish; API values (`Draft`, ETags, paths) stay as returned |
 
+## Practice mode, 2026-11-03
+
+Spec 008. Observed with Playwright and Chromium against the production build, without a token and
+without a backend, at 1440 px and 390 px:
+
+| Check | Observation |
+|---|---|
+| Lifecycle without a token | Header `Pruébalo · sin registro` with the option `Tengo un token local`; every action enabled |
+| Create → activate | `Póliza SYNTH-… creada como borrador.` then `La póliza ya está activa…`; chip `Simulada · en el navegador`; inspector shows `Última respuesta · 201` then `· 200`, ETag and stored rowversion |
+| Try with the old version | Sends the previous ETag; red notice `El servidor comparó la versión antigua con la almacenada y rechazó el cambio con 412. La póliza no cambió.`; inspector `Última respuesta · 412`, state still `Active` |
+| Cancel | `Póliza cancelada…`; `Última respuesta · 200`; state `Cancelled` |
+| Audit without a token | `Leer el historial de esta póliza` on the practised id returns the two transitions labelled `Simulada · en el navegador` |
+| Phone 390 px | Same flow; no horizontal scroll after the panel headers were allowed to wrap |
+
 ## Client walkthrough, 2026-11-03
 
 Spec 006 added narration, a guided walkthrough, selectable layers and a stacked phone layout to the

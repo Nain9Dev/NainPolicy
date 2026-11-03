@@ -73,11 +73,7 @@ watch(token, (newVal) => {
           @open-token-modal="isTokenModalOpen = true"
         />
         <ConcurrencyLabView v-else-if="activeTab === 'concurrency'" />
-        <AuditTrailView
-          v-else-if="activeTab === 'audit'"
-          :token="token"
-          @open-token-modal="isTokenModalOpen = true"
-        />
+        <AuditTrailView v-else-if="activeTab === 'audit'" :token="token" />
         <ResilienceProbeView v-else-if="activeTab === 'resilience'" />
       </main>
 
