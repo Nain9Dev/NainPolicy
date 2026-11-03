@@ -196,9 +196,9 @@ export const mockPolicyEngine = {
         version: encodeRowVersion(1),
       };
       policies.set(policyId, { policy: synthPolicy, versionNum: 1 });
-      return { policy: synthPolicy, etag: `"${synthPolicy.version}"` };
+      return { policy: { ...synthPolicy }, etag: `"${synthPolicy.version}"` };
     }
-    return { policy: item.policy, etag: `"${item.policy.version}"` };
+    return { policy: { ...item.policy }, etag: `"${item.policy.version}"` };
   },
 
   listTransitions(policyId: string): PolicyTransitionResponse[] {
@@ -227,7 +227,7 @@ export const mockPolicyEngine = {
 
     policies.set(id, { policy, versionNum });
     transitions.set(id, []);
-    return { policy, etag: `"${version}"` };
+    return { policy: { ...policy }, etag: `"${version}"` };
   },
 
   activatePolicy(
@@ -283,7 +283,8 @@ export const mockPolicyEngine = {
     });
     transitions.set(policyId, trans);
 
-    return { policy: item.policy, etag: `"${nextVerStr}"` };
+    // A copy: callers must never hold a reference to the engine's own state.
+    return { policy: { ...item.policy }, etag: `"${nextVerStr}"` };
   },
 
   cancelPolicy(
@@ -337,6 +338,7 @@ export const mockPolicyEngine = {
     });
     transitions.set(policyId, trans);
 
-    return { policy: item.policy, etag: `"${nextVerStr}"` };
+    // A copy: callers must never hold a reference to the engine's own state.
+    return { policy: { ...item.policy }, etag: `"${nextVerStr}"` };
   },
 };
