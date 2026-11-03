@@ -190,6 +190,7 @@ SQL Server Standard Developer es gratuito para desarrollo/pruebas, pero no está
 - [Spec 001: resiliencia del plan gratuito](specs/001-portfolio-demo-resilience/spec.md)
 - [Spec 006: recorrido guiado del blueprint](specs/006-guided-blueprint-walkthrough/spec.md)
 - [Spec 007: capa comercial y cliente bilingüe](specs/007-commercial-layer-and-locale/spec.md)
+- [Spec 008: modo práctica sin token](specs/008-practice-mode/spec.md)
 - [ADR-001: product direction](docs/decisions/ADR-001-product-direction.md)
 - [ADR-002: runtime and architecture](docs/decisions/ADR-002-runtime-and-architecture.md)
 - [ADR-003: lifecycle and security](docs/decisions/ADR-003-lifecycle-security-and-organization-boundary.md)
