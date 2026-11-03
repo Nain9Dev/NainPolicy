@@ -7,6 +7,55 @@
 Relevant behavioural changes, newest first. Dates are the date the change was made, not released.
 A change is listed only when it alters behaviour, contracts, evidence or operating boundaries.
 
+## 0.21 — 2026-11-03 — Design of an anonymous sandbox (documents only)
+
+ADR-010 and spec 009 record, as `Proposed` and design only, how a prospect could drive a policy
+of their own against the real API without a token: a dedicated sandbox organization served by the
+existing application services, a closed allow-list with no free text, possession of the random
+identifier as the only key, per-client and global daily caps, 24-hour retention, disabled by
+default, and a measured seven-day trial before it may stay enabled. No code, no deployment and
+no cost change; the owner decides (`T-902`).
+
+## 0.20 — 2026-11-03 — The Azure `/demo/` page follows the blueprint identity
+
+Static files of the API only (`wwwroot/demo`); no C# change, the CSP and the contract are untouched.
+
+- Tokens of the server-rendered Spanish page now match the repository banner and the guided
+  client: navy grid, brand green action with the red offset on hover, hairline frames, square
+  corners. System fonts stay, as the CSP requires.
+- The five steps read in plain language (`Se bloquea una escritura con versión antigua (412)`
+  instead of `Rechazar ETag obsoleto`), in the page and in the script that fills them.
+- A `Recorrido guiado paso a paso` action links to `https://policy.naindev.com/`, the primary
+  showcase the portfolio points to.
+
+## 0.19 — 2026-11-03 — Continuity between tabs; the Audit tab no longer runs the demo by itself
+
+Spec 008, second pass. Client only.
+
+- A page session remembers the policy the visitor drove and the last scenario run. The Audit tab
+  opens on that policy's history (named `History of the policy you drove` / `History of your last
+  run`) without a new request; a live run's ledger is shown from the answer already received.
+- Opening the Audit tab no longer runs the demo on its own, which spent free quota per visit and
+  showed an unrelated policy. The demo runs only on the visitor's click; the empty state explains
+  what to do.
+- 4 new client tests (109 in total).
+
+## 0.18 — 2026-11-03 — Accessibility: zero axe violations on every tab
+
+Closes the `REQ-123` gap of spec 002 with evidence. Client only.
+
+- `axe-core` audit (WCAG 2.0/2.1/2.2 A and AA plus best practices) on the five tabs: 0 violations
+  after this change; before it reported insufficient contrast of the dim text token (3.8:1),
+  accessible names that did not contain the visible text (locale toggle, blueprint layers),
+  focusable descendants inside a `role="img"`, heading levels that skipped one, and seven form
+  controls without a label.
+- The dim text token is now 6.1:1 on the surface colour; the rejected status pill 5.2:1.
+- Blueprint layers are named by their visible title and tagline; the focus target is the box; the
+  sheet is a `group` with a description instead of an image with focusable children.
+- Card titles are `h3` under the view `h2`; the locale toggle's name starts with its visible text.
+- `npm run audit:a11y` (`scripts/axe-audit.cjs`) reruns the audit against a local preview; it
+  needs Playwright with Chromium available to Node and is not part of CI.
+
 ## 0.17 — 2026-11-03 — Practice mode: the workbench works without a token
 
 Governing spec: 008 (`Proposed`). Client only; no API change.

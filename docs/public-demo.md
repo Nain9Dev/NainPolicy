@@ -38,7 +38,24 @@ without a backend, at 1440 px and 390 px:
 | Try with the old version | Sends the previous ETag; red notice `El servidor comparó la versión antigua con la almacenada y rechazó el cambio con 412. La póliza no cambió.`; inspector `Última respuesta · 412`, state still `Active` |
 | Cancel | `Póliza cancelada…`; `Última respuesta · 200`; state `Cancelled` |
 | Audit without a token | `Leer el historial de esta póliza` on the practised id returns the two transitions labelled `Simulada · en el navegador` |
+| Audit continuity | Fresh session: `#audit` makes no request and shows the hint. After a run: `Historial de tu última ejecución` with its two rows and origin chip, no new request. After driving a policy: `Historial de la póliza que has conducido` with its rows |
 | Phone 390 px | Same flow; no horizontal scroll after the panel headers were allowed to wrap |
+
+## Accessibility audit, 2026-11-03
+
+`npm run audit:a11y` runs axe-core 4.14 (WCAG 2.0/2.1/2.2 A and AA plus best practices) on the
+five tabs of the production build served by `vite preview`, in Spanish, after a run of the blueprint:
+
+| Tab | Before | After |
+|---|---|---|
+| Blueprint | contrast (7 nodes), accessible name mismatch (7), focusable children inside `role="img"` | 0 violations, 42 rules passed |
+| Lifecycle | contrast (3), heading order, name mismatch, 7 inputs without label, select without name | 0 violations, 36 rules passed |
+| Concurrency | contrast (19), name mismatch | 0 violations, 37 rules passed |
+| Audit | contrast (12), name mismatch | 0 violations, 34 rules passed |
+| Resilience | contrast, heading order, name mismatch | 0 violations, 31 rules passed |
+
+Keyboard: focusing a layer box and pressing `Enter` or `Space` selects it (`aria-pressed`), `Escape`
+returns to the run. Not verified: a screen reader session; the audit is automated only.
 
 ## Client walkthrough, 2026-11-03
 
@@ -138,6 +155,14 @@ Production after zip deploy:
 
 The residual slowness is the Azure SQL free-tier resume after idle (about 1 to 2 minutes), which
 the offer does not allow removing. The page probes readiness and retries (ADR-006).
+
+## Azure `/demo/` page, 2026-11-03
+
+The server-rendered Spanish page was restyled on the blueprint identity and links to the guided
+client. Observed from a local static server (the API was not running, so the page showed its
+`waking` state): desktop 1440 px and phone 390 px without horizontal scroll; steps in plain
+language; `Recorrido guiado paso a paso` beside the run button. Not verified: the deployed page,
+which needs the API redeploy.
 
 ## Public contract
 

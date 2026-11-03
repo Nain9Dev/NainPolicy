@@ -14,6 +14,7 @@ import { format } from '../i18n/messages';
 import { useLocale } from '../i18n/locale';
 import { nextStep, previousStep, walkthroughDelayMs } from '../architecture/walkthrough';
 import { api, ApiError, type WarmState } from '../services/api';
+import { rememberRun } from '../services/session';
 import type { ScenarioRun } from '../types/contracts';
 
 const emit = defineEmits<{ (e: 'navigate', tab: TabId): void }>();
@@ -157,6 +158,7 @@ async function handleRun() {
     stopElapsed();
     elapsedMs.value = result.elapsedMs;
     run.value = result;
+    rememberRun(result);
     frames.value = buildTimeline(result.response.steps);
     replay();
   } catch (err: unknown) {
@@ -617,7 +619,7 @@ async function copyEvidence() {
 }
 
 .status-pill.is-rejected {
-  background: var(--brand-red);
+  background: #c40018; /* 5.2:1 with white text; the brand red alone is 4.0:1 */
   color: #ffffff;
 }
 

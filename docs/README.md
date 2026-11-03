@@ -1,6 +1,6 @@
 # Documentation map
 
-- Document version: 0.11
+- Document version: 0.12
 - Status: Active
 - Date: 2026-11-03
 - Owner: Aitor Nain Mendoza Vallejo
@@ -60,6 +60,8 @@ If two approved sources conflict and neither has precedence, the affected work s
 | `docs/decisions/ADR-009-commercial-layer-and-bilingual-client.md` | Hero, problem cards and engagement band with verifiable claims; Spanish and English client | 0.1 | Proposed | None |
 | `specs/007-commercial-layer-and-locale/` | In-flight change implementing ADR-009 | 0.1 | Proposed | None |
 | `specs/008-practice-mode/` | Lifecycle workbench usable without a token; one origin rule for authorized operations | 0.1 | Proposed | None |
+| `docs/decisions/ADR-010-anonymous-sandbox-for-hands-on-practice.md` | Anonymous, allow-listed, capped sandbox against the real API; design only | 0.1 | Proposed | None |
+| `specs/009-anonymous-sandbox/` | Design of the sandbox: surface, allow-list, isolation, caps, trial before enabling; no implementation authorized | 0.1 | Proposed, design only | None |
 | `AGENTS.md` | Canonical constitution for agents and contributors | 0.1 | Active | None |
 | `SECURITY.md` | Vulnerability reporting and security posture | 0.1 | Active | None |
 
