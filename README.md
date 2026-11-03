@@ -26,7 +26,7 @@ El objetivo no es aparentar un SaaS terminado, sino demostrar con código limpio
 
 | Quiero… | Dónde |
 |---|---|
-| Ver la arquitectura en vivo (Vue 3) | [https://policy.naindev.com](https://policy.naindev.com): un blueprint que recorre cada paso real por las capas con narración en lenguaje llano, el `412` del guard de concurrencia y el ledger append-only. Se puede pausar, avanzar paso a paso y pulsar cada capa para saber qué hace. Cada ejecución indica si es `Live` o `Simulated` |
+| Ver la arquitectura en vivo (Vue 3) | [https://policy.naindev.com](https://policy.naindev.com), en español o inglés según el navegador: qué protege, un blueprint que recorre cada paso real por las capas con narración en lenguaje llano, el `412` del guard de concurrencia y el ledger append-only. Se puede pausar, avanzar paso a paso y pulsar cada capa para saber qué hace. Cada ejecución indica si es `Live` o `Simulated` |
 | Ver la documentación de la API | [Scalar Docs](http://localhost:8110/docs) (OpenAPI .NET 10 nativo en `/docs`) |
 | Ver el flujo funcionando online | [Demo pública](https://policy.naindev.com/) — un clic, sin registro |
 | Reproducirlo yo mismo | `curl -i -X POST "https://nain-policy-demo-api.azurewebsites.net/api/v1/demo/run" -H "Accept: application/json"` |
@@ -189,6 +189,7 @@ SQL Server Standard Developer es gratuito para desarrollo/pruebas, pero no está
 - [Changelog](docs/changelog.md)
 - [Spec 001: resiliencia del plan gratuito](specs/001-portfolio-demo-resilience/spec.md)
 - [Spec 006: recorrido guiado del blueprint](specs/006-guided-blueprint-walkthrough/spec.md)
+- [Spec 007: capa comercial y cliente bilingüe](specs/007-commercial-layer-and-locale/spec.md)
 - [ADR-001: product direction](docs/decisions/ADR-001-product-direction.md)
 - [ADR-002: runtime and architecture](docs/decisions/ADR-002-runtime-and-architecture.md)
 - [ADR-003: lifecycle and security](docs/decisions/ADR-003-lifecycle-security-and-organization-boundary.md)
@@ -196,6 +197,7 @@ SQL Server Standard Developer es gratuito para desarrollo/pruebas, pero no está
 - [ADR-005: public demo and free hosting](docs/decisions/ADR-005-public-demo-and-free-hosting.md)
 - [ADR-006: free-tier resilience and demo evidence](docs/decisions/ADR-006-free-tier-resilience-and-demo-evidence.md) (aprobado)
 - [ADR-008: guided walkthrough and plain-language narration](docs/decisions/ADR-008-guided-walkthrough-and-plain-language-narration.md) (propuesto)
+- [ADR-009: commercial layer and bilingual client](docs/decisions/ADR-009-commercial-layer-and-bilingual-client.md) (propuesto)
 
 ## Autor
 

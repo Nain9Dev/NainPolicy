@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import ViewHeader from '../components/ViewHeader.vue';
+import { useLocale } from '../i18n/locale';
 import { api } from '../services/api';
 import type { HealthCheckResult } from '../types/contracts';
+
+const { t } = useLocale();
 
 const isProbingLiveness = ref(false);
 const isProbingReadiness = ref(false);
@@ -61,11 +64,7 @@ async function probeReadiness() {
 <template>
   <div class="resilience-view">
     <!-- Header card -->
-    <ViewHeader
-      eyebrow="Free tier, honest errors"
-      title="A sleeping database is not a bug"
-      lede="The database pauses when idle to keep the cost at zero. Probing it while it wakes returns 503 with Retry-After, never a 500, so a client knows to wait rather than to fail."
-    />
+    <ViewHeader :eyebrow="t.views.resilience.eyebrow" :title="t.views.resilience.title" :lede="t.views.resilience.lede" />
 
     <div class="glass-panel info-card">
       <div class="probe-actions">

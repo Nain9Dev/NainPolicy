@@ -1,6 +1,6 @@
 # Traceability
 
-- Document version: 0.3
+- Document version: 0.4
 - Status: Active
 - Date: 2026-11-03
 - Scope: Approved rule identifier to the test that demonstrates it
@@ -180,6 +180,21 @@ Suite `C` — `PolicyOperations.Client` Vitest (`npm test`, no browser).
 | `REQ-157` legend | — | Browser walkthrough recorded in `docs/public-demo.md` (2026-11-03) |
 | `REQ-160` secondary views open with eyebrow, title and one sentence | — | Browser walkthrough recorded in `docs/public-demo.md` (2026-11-03) |
 | `REQ-161` demo results labelled `Live` / `Simulated`, never verified | C | `names a live result after SQL Server and a simulated one after the browser`, `never calls a simulated result live, verified or real`; browser: chip observed on Audit and Concurrency |
+
+## Commercial layer and locale (spec 007, ADR-009 proposed)
+
+| Requirement | Suite | Test |
+|---|---|---|
+| `REQ-170` hero: outcome headline, three protections, two actions | — | Browser walkthrough recorded in `docs/public-demo.md` (2026-11-03); `keeps the hero headline short enough to read at a glance` bounds the title |
+| `REQ-171` proof chips state only verifiable facts | C | `states only verifiable proof in the hero: no counts, no customers`; browser: each chip links to the repository or the CI workflow |
+| `REQ-172` problem cards open the proving tab or evidence | — | Browser: card 1 opens `#concurrency`, card 3 links to `docs/traceability.md` |
+| `REQ-173` engagement band without unverifiable claims | — | Review of the catalogue; browser walkthrough |
+| `REQ-174` locale from stored preference, then browser language, else English | C | `honours a stored preference over the browser language`, `picks Spanish for a Spanish browser when nothing is stored`, `falls back to English for any other or unknown language`, `ignores a stored value that is not a supported locale` |
+| `REQ-175` every visitor-facing surface follows the locale; `lang` attribute follows | — | Browser: `lang` is `es` for `es-ES`, toggle switches headers and stores `en`; narration in both locales covered by `narration in Spanish` |
+| `REQ-176` same keys in both locales, bounded lengths | C | `defines exactly the same keys in both locales`, `leaves no string empty in either locale`, `keeps every step narration and layer guide inside the spec 006 bounds in both locales` |
+| `REQ-177` tabs addressable by hash | C | `maps each hash to its tab, case-insensitively`, `opens the blueprint for an empty or unknown hash`, `round-trips every tab through its hash`; browser: `#audit` opens the Audit tab |
+| `REQ-178` copyable run summary | C | `states the run id, origin, server time and page address`, `lists one line per step…`, `ends with the final state and the ledger size`, `labels a simulated run honestly and says so in Spanish too`; browser: clipboard content read back in both locales |
+| `REQ-179` Open Graph and Twitter metadata | — | Review of `index.html` |
 | `REQ-158` reduced motion: no flow, no auto walkthrough, stepping works | — | Browser walkthrough with `prefers-reduced-motion: reduce` emulated (2026-11-03) |
 
 ## Known gaps

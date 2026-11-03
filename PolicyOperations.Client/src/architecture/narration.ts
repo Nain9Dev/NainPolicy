@@ -1,9 +1,11 @@
+import { format, MESSAGES, type LayerText, type Locale, type SourceText } from '../i18n/messages';
 import type { ScenarioSource } from '../types/contracts';
 import type { BlueprintFrame, NodeId } from './blueprintTimeline';
 
 /**
  * Plain-language narration for the blueprint (spec 006). Pure: a frame in, text out. The copy is
- * derived from the API step so a live run narrates what the server did, not a script.
+ * derived from the API step so a live run narrates what the server did, not a script. The words
+ * live in the message catalogue (spec 007) so the same frame narrates in either locale.
  */
 
 export const MAX_TITLE_CHARS = 48;
@@ -24,70 +26,43 @@ export interface Narration {
   evidence: Evidence | null;
 }
 
-export interface LayerGuide {
-  name: string;
-  /** Short line drawn under the node title inside the blueprint. */
-  tagline: string;
-  /** One or two plain sentences shown in the narrator when the layer is selected. */
-  role: string;
-  responsibilities: string[];
-}
-
-export const IDLE_NARRATION: Narration = Object.freeze({
-  eyebrow: 'What you will see',
-  title: 'One policy, start to finish',
-  body:
-    'Press run and five real requests cross the system: a policy is created, activated, protected from a stale overwrite, cancelled, and its history is read back. Synthetic data, no sign-up.',
-  evidence: null,
-});
-
-const KNOWN: Record<string, { title: string; body: string }> = {
-  create_draft: {
-    title: 'A new policy is created',
-    body: "The browser asks for a new policy. The API scopes it to the caller's organization, the domain creates it as a Draft and SQL Server stores it with a version stamp, returned as an ETag.",
-  },
-  activate_policy: {
-    title: 'The draft becomes active',
-    body: 'The request carries the current version. The domain checks the activation rules, the policy becomes Active, and the policy row and its audit row are saved in one transaction.',
-  },
-  reject_stale_update: {
-    title: 'A stale write is blocked',
-    body: 'A second request arrives with an outdated version. The concurrency guard compares it with the stored version and refuses it with 412. Nothing is changed and nothing is logged.',
-  },
-  cancel_policy: {
-    title: 'The policy is cancelled',
-    body: 'With the fresh version the cancellation passes the guard. The policy moves to Cancelled, a final state, and the audit ledger gains its second row in the same transaction.',
-  },
-  read_audit_trail: {
-    title: 'The history is read back',
-    body: 'The browser reads the transition ledger. Both state changes come back in order, each with its actor, time and reason, exactly as SQL Server stored them.',
-  },
-};
+export type LayerGuide = LayerText;
 
 function clamp(text: string, max: number): string {
   return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
 }
 
-function fallbackBody(frame: BlueprintFrame): string {
-  const answered = `The server answered ${frame.status} to ${frame.method} in ${frame.durationMs} ms.`;
-  if (frame.tone === 'rejected') {
-    const why = frame.errorCode ? ` (${frame.errorCode.replace(/_/g, ' ')})` : '';
-    return `${answered} The request was refused${why}; nothing changed.`;
-  }
-  const state = frame.domainState === 'None' ? '' : ` The policy is now ${frame.domainState}.`;
-  return `${answered} The request was accepted.${state}`;
+export function idleNarration(locale: Locale = 'en'): Narration {
+  const idle = MESSAGES[locale].narration.idle;
+  return { eyebrow: idle.eyebrow, title: idle.title, body: idle.body, evidence: null };
 }
 
-export function narrate(frame: BlueprintFrame, total: number): Narration {
-  if (frame.index === 0) return IDLE_NARRATION;
+/** English idle copy; kept for callers that do not carry a locale. */
+export const IDLE_NARRATION: Narration = Object.freeze(idleNarration('en'));
 
-  const outcome = frame.tone === 'rejected' ? 'Rejected as expected' : 'Accepted';
-  const known = KNOWN[frame.operation];
+function fallbackBody(frame: BlueprintFrame, locale: Locale): string {
+  const m = MESSAGES[locale].narration;
+  const values = { status: frame.status, method: frame.method, ms: frame.durationMs };
+  if (frame.tone === 'rejected') {
+    const why = frame.errorCode ? ` (${frame.errorCode.replace(/_/g, ' ')})` : '';
+    return format(m.fallbackRejected, { ...values, why });
+  }
+  const state = frame.domainState === 'None' ? '' : format(m.fallbackState, { state: frame.domainState });
+  return `${format(m.fallbackAccepted, values)}${state}`;
+}
+
+export function narrate(frame: BlueprintFrame, total: number, locale: Locale = 'en'): Narration {
+  if (frame.index === 0) return locale === 'en' ? IDLE_NARRATION : idleNarration(locale);
+
+  const m = MESSAGES[locale];
+  const outcome = frame.tone === 'rejected' ? m.blueprint.rejected : m.blueprint.accepted;
+  const known = m.narration.steps[frame.operation];
+  const label = m.blueprint.stepLabels[frame.operation] ?? frame.label;
 
   return {
-    eyebrow: `Step ${frame.index} of ${total} · ${outcome}`,
-    title: clamp(known?.title ?? frame.label, MAX_TITLE_CHARS),
-    body: clamp(known?.body ?? fallbackBody(frame), MAX_BODY_CHARS),
+    eyebrow: `${format(m.blueprint.stepOf, { n: frame.index, total })} · ${outcome}`,
+    title: clamp(known?.title ?? label, MAX_TITLE_CHARS),
+    body: clamp(known?.body ?? fallbackBody(frame, locale), MAX_BODY_CHARS),
     evidence: {
       method: frame.method,
       path: frame.path,
@@ -98,53 +73,14 @@ export function narrate(frame: BlueprintFrame, total: number): Narration {
   };
 }
 
-export const LAYER_GUIDE: Readonly<Record<NodeId, LayerGuide>> = Object.freeze({
-  client: {
-    name: 'Browser',
-    tagline: 'sends requests, shows results',
-    role: 'Your browser sends plain HTTPS requests and shows what comes back. In this demo it sends no personal data and no token: the server uses a fixed synthetic organization.',
-    responsibilities: ['One click, one POST to the public demo endpoint', 'Draws the response; computes nothing', 'Labels every run Live or Simulated'],
-  },
-  api: {
-    name: 'API',
-    tagline: 'the front door',
-    role: 'The front door. It validates the caller, derives organization and role from the token, checks the version header and turns every error into a safe, documented response.',
-    responsibilities: ['JWT validation, roles and organization scope', 'ETag out, If-Match in', 'Problem Details, 429 rate limit, 503 with Retry-After'],
-  },
-  application: {
-    name: 'Application',
-    tagline: 'runs each use case',
-    role: 'Runs each use case: create, activate, cancel, read. It owns the concurrency guard and saves the policy and its audit row in one unit of work. It knows no database details.',
-    responsibilities: ['One service per use case, no framework', 'Concurrency guard: If-Match must equal the stored version', 'Policy and audit row saved together'],
-  },
-  domain: {
-    name: 'Domain',
-    tagline: 'the rules of a policy',
-    role: 'The rules of a policy: which states exist, which transitions are allowed and what a valid amount is. Pure code with no web, database or framework reference.',
-    responsibilities: ['Draft, Active and Cancelled; Cancelled is final', 'Activation needs an insured party and coverage dates', 'Every transition produces an audit entry'],
-  },
-  infrastructure: {
-    name: 'Infrastructure',
-    tagline: 'talks to the database',
-    role: 'Talks to SQL Server through EF Core. It maps the version stamp, retries transient failures while the free database wakes up and owns the migrations.',
-    responsibilities: ['EF Core 10 mappings and migrations', 'rowversion as the optimistic concurrency token', 'Transient retry, 60 s command timeout'],
-  },
-  sql: {
-    name: 'SQL Server',
-    tagline: 'stores policies and history',
-    role: 'Stores the Policies table and the append-only PolicyTransitions ledger. It runs on the Azure free offer, so it may be asleep when you arrive and wake on the first request.',
-    responsibilities: ['Policies: status, amount, version stamp', 'PolicyTransitions: append-only audit ledger', 'Constraints enforce the rules even outside the API'],
-  },
-});
-
-export interface SourceText {
-  label: string;
-  title: string;
+export function layerGuide(locale: Locale = 'en'): Readonly<Record<NodeId, LayerGuide>> {
+  return MESSAGES[locale].layers;
 }
 
+/** English layer guide; kept for callers that do not carry a locale. */
+export const LAYER_GUIDE: Readonly<Record<NodeId, LayerGuide>> = layerGuide('en');
+
 /** One wording for the origin of a result, shared by every view (ADR-007, REQ-161). */
-export function describeSource(source: ScenarioSource): SourceText {
-  return source === 'live'
-    ? { label: 'Live · SQL Server', title: 'Response from the API and SQL Server' }
-    : { label: 'Simulated · in-browser', title: 'In-browser fallback: the API was unreachable or still waking' };
+export function describeSource(source: ScenarioSource, locale: Locale = 'en'): SourceText {
+  return MESSAGES[locale].source[source];
 }

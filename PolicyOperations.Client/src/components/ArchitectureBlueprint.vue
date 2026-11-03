@@ -2,7 +2,8 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import type { BlueprintLayout } from '../architecture/blueprintLayout';
 import { EDGE_IDS, NODE_IDS } from '../architecture/blueprintLayout';
-import { LAYER_GUIDE } from '../architecture/narration';
+import { layerGuide } from '../architecture/narration';
+import { useLocale } from '../i18n/locale';
 import type { BlueprintFrame, EdgeId, NodeId } from '../architecture/blueprintTimeline';
 
 export type BlueprintPhase = 'idle' | 'waiting' | 'replaying' | 'done' | 'error';
@@ -22,7 +23,10 @@ const emit = defineEmits<{
 
 const HOP_MS = 360;
 
-/* Technical chips per node. The plain-language line comes from LAYER_GUIDE. */
+const { locale } = useLocale();
+const guide = computed(() => layerGuide(locale.value));
+
+/* Technical chips per node. The plain-language line comes from the layer guide of the active locale. */
 const CHIPS: Partial<Record<NodeId, string[]>> = {
   client: ['HTTPS · JSON', 'no token · no body'],
   api: ['JWT · roles · org scope', 'ETag / If-Match', 'Problem Details', '429 · 503 + Retry-After'],
@@ -215,9 +219,9 @@ const readout = computed(() => {
 });
 
 function nodeLabel(id: NodeId) {
-  const guide = LAYER_GUIDE[id];
+  const layer = guide.value[id];
   const state = isLit(id) ? ', on the current request path' : '';
-  return `${guide.name}: ${guide.tagline}${state}. Select to read what it does.`;
+  return `${layer.name}: ${layer.tagline}${state}.`;
 }
 
 function onNodeKey(event: KeyboardEvent, id: NodeId) {
@@ -360,11 +364,11 @@ const rootClass = computed(() => [
       <template v-if="id === 'sql'">
         <ellipse :cx="sqlGeom.cyl.cx" :cy="sqlGeom.cyl.cy" rx="36" ry="9" class="cylinder" />
         <text :x="sqlGeom.title.x" :y="sqlGeom.title.y" class="node-title" :text-anchor="sqlGeom.title.anchor">SQL Server</text>
-        <text :x="sqlGeom.tag.x" :y="sqlGeom.tag.y" class="node-plain" :text-anchor="sqlGeom.title.anchor">{{ LAYER_GUIDE.sql.tagline }}</text>
+        <text :x="sqlGeom.tag.x" :y="sqlGeom.tag.y" class="node-plain" :text-anchor="sqlGeom.title.anchor">{{ guide.sql.tagline }}</text>
       </template>
       <template v-else>
-        <text :x="layout.nodes[id].x + PAD" :y="layout.nodes[id].y + 28" class="node-title">{{ LAYER_GUIDE[id].name }}</text>
-        <text :x="layout.nodes[id].x + PAD" :y="layout.nodes[id].y + 46" class="node-plain">{{ LAYER_GUIDE[id].tagline }}</text>
+        <text :x="layout.nodes[id].x + PAD" :y="layout.nodes[id].y + 28" class="node-title">{{ guide[id].name }}</text>
+        <text :x="layout.nodes[id].x + PAD" :y="layout.nodes[id].y + 46" class="node-plain">{{ guide[id].tagline }}</text>
       </template>
 
       <!-- Chips -->

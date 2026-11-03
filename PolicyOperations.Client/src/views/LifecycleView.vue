@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import ViewHeader from '../components/ViewHeader.vue';
+import { useLocale } from '../i18n/locale';
 import { api, ApiError } from '../services/api';
 import type { PolicyResponse } from '../types/contracts';
+
+const { t } = useLocale();
 
 const props = defineProps<{
   token: string;
@@ -141,11 +144,7 @@ async function handleCancelPolicy() {
 
 <template>
   <div class="lifecycle-view">
-    <ViewHeader
-      eyebrow="Hands-on · needs a local token"
-      title="Drive one policy yourself"
-      lede="Create a draft, activate it and cancel it with your own requests. Every change must carry the current version, so a request built on an old one is refused."
-    />
+    <ViewHeader :eyebrow="t.views.lifecycle.eyebrow" :title="t.views.lifecycle.title" :lede="t.views.lifecycle.lede" />
 
     <!-- State machine -->
     <div class="glass-panel state-machine-panel">

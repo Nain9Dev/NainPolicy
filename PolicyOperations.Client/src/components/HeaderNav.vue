@@ -1,23 +1,29 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+import type { TabId } from '../architecture/tabRoute';
+import { useLocale } from '../i18n/locale';
 import { DOCS_URL } from '../services/api';
+import { LINKS } from '../services/links';
 
 defineProps<{
-  activeTab: string;
+  activeTab: TabId;
   hasToken: boolean;
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:activeTab', tab: string): void;
+  (e: 'update:activeTab', tab: TabId): void;
   (e: 'openTokenModal'): void;
 }>();
 
-const tabs = [
-  { id: 'scenario', label: 'Blueprint' },
-  { id: 'workbench', label: 'Lifecycle' },
-  { id: 'concurrency', label: 'Concurrency' },
-  { id: 'audit', label: 'Audit' },
-  { id: 'resilience', label: 'Resilience' },
-];
+const { t, toggleLocale } = useLocale();
+
+const tabs = computed<{ id: TabId; label: string }[]>(() => [
+  { id: 'scenario', label: t.value.nav.blueprint },
+  { id: 'workbench', label: t.value.nav.lifecycle },
+  { id: 'concurrency', label: t.value.nav.concurrency },
+  { id: 'audit', label: t.value.nav.audit },
+  { id: 'resilience', label: t.value.nav.resilience },
+]);
 </script>
 
 <template>
@@ -39,17 +45,18 @@ const tabs = [
         </svg>
         <div class="brand-text">
           <h1 class="gradient-title">NainPolicy</h1>
-          <span class="eyebrow">Policy operations · .NET 10 · SQL Server</span>
+          <span class="eyebrow">{{ t.hero.eyebrow }}</span>
         </div>
       </div>
 
       <div class="actions">
         <button type="button" class="btn btn-secondary token-btn" @click="emit('openTokenModal')">
           <span :class="['status-dot', hasToken ? 'on' : 'off']" aria-hidden="true"></span>
-          <span>{{ hasToken ? 'JWT' : 'JWT' }}</span>
+          <span>{{ t.nav.jwt }}</span>
         </button>
-        <a :href="DOCS_URL" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">OpenAPI</a>
-        <a href="https://github.com/Nain9Dev/API-Gestion-Financiera" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Source</a>
+        <a :href="DOCS_URL" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">{{ t.nav.openapi }}</a>
+        <a :href="LINKS.repository" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">{{ t.nav.source }}</a>
+        <button type="button" class="btn btn-secondary locale-btn" :title="t.nav.switchTitle" :aria-label="t.nav.switchTitle" @click="toggleLocale">{{ t.nav.switchLabel }}</button>
       </div>
     </div>
 
@@ -118,6 +125,12 @@ const tabs = [
   font-size: 0.78rem;
   font-family: var(--font-mono);
   letter-spacing: 0.06em;
+}
+
+.locale-btn {
+  min-width: 44px;
+  border-color: rgba(56, 189, 248, 0.45);
+  color: var(--accent-cyan);
 }
 
 .status-dot {

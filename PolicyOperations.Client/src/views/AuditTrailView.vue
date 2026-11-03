@@ -2,8 +2,11 @@
 import { ref, onMounted } from 'vue';
 import SourceChip from '../components/SourceChip.vue';
 import ViewHeader from '../components/ViewHeader.vue';
+import { useLocale } from '../i18n/locale';
 import { api, ApiError } from '../services/api';
 import type { PolicyTransitionResponse, ScenarioSource } from '../types/contracts';
+
+const { t } = useLocale();
 
 const props = defineProps<{
   token: string;
@@ -72,11 +75,7 @@ onMounted(() => {
 <template>
   <div class="audit-view">
     <!-- Header info card -->
-    <ViewHeader
-      eyebrow="Append-only ledger"
-      title="Every state change is on record"
-      lede="Each transition is stored with who did it, when, why and under which request. Rows are only ever added, never edited or deleted."
-    />
+    <ViewHeader :eyebrow="t.views.audit.eyebrow" :title="t.views.audit.title" :lede="t.views.audit.lede" />
 
     <div class="glass-panel info-card">
       <div class="search-bar">

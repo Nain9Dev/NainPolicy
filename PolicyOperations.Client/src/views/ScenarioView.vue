@@ -1,15 +1,28 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import ArchitectureBlueprint, { type BlueprintPhase } from '../components/ArchitectureBlueprint.vue';
+import EngageBand from '../components/EngageBand.vue';
+import HeroBand from '../components/HeroBand.vue';
 import SourceChip from '../components/SourceChip.vue';
+import ValueCards from '../components/ValueCards.vue';
 import { layoutFor, type BlueprintLayout } from '../architecture/blueprintLayout';
 import { buildTimeline, IDLE_FRAME, replayDelayMs, type BlueprintFrame, type NodeId } from '../architecture/blueprintTimeline';
-import { IDLE_NARRATION, LAYER_GUIDE, narrate } from '../architecture/narration';
+import { idleNarration, layerGuide, narrate } from '../architecture/narration';
+import { runSummary } from '../architecture/runSummary';
+import type { TabId } from '../architecture/tabRoute';
+import { format } from '../i18n/messages';
+import { useLocale } from '../i18n/locale';
 import { nextStep, previousStep, walkthroughDelayMs } from '../architecture/walkthrough';
 import { api, ApiError, type WarmState } from '../services/api';
 import type { ScenarioRun } from '../types/contracts';
 
+const emit = defineEmits<{ (e: 'navigate', tab: TabId): void }>();
+const { locale, t } = useLocale();
+
 const phase = ref<BlueprintPhase>('idle');
+const copied = ref(false);
+const sheetEl = ref<HTMLElement | null>(null);
+let copiedTimer: number | null = null;
 const run = ref<ScenarioRun | null>(null);
 const frames = ref<BlueprintFrame[]>([]);
 const currentIndex = ref(0);
@@ -30,7 +43,8 @@ let replayTimers: number[] = [];
 let walkTimers: number[] = [];
 
 /** The fixed public scenario (docs/public-demo.md); shown dimmed before the first run. */
-const PLANNED_STEPS = ['Create draft', 'Activate', 'Stale version', 'Cancel', 'Audit trail'];
+const PLANNED_OPERATIONS = ['create_draft', 'activate_policy', 'reject_stale_update', 'cancel_policy', 'read_audit_trail'];
+const plannedSteps = computed(() => PLANNED_OPERATIONS.map((op) => t.value.blueprint.stepLabels[op] ?? op));
 
 onMounted(() => {
   motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -117,8 +131,8 @@ const visitedNodes = computed<NodeId[]>(() => {
   return [...set];
 });
 
-const narration = computed(() => (frames.value.length ? narrate(currentFrame.value, frames.value.length) : IDLE_NARRATION));
-const selectedGuide = computed(() => (selectedNode.value ? LAYER_GUIDE[selectedNode.value] : null));
+const narration = computed(() => (frames.value.length ? narrate(currentFrame.value, frames.value.length, locale.value) : idleNarration(locale.value)));
+const selectedGuide = computed(() => (selectedNode.value ? layerGuide(locale.value)[selectedNode.value] : null));
 const elapsedLabel = computed(() => `${(elapsedMs.value / 1000).toFixed(1)} s`);
 const total = computed(() => frames.value.length);
 const atLast = computed(() => currentIndex.value >= total.value);
@@ -227,21 +241,49 @@ function shortEtag(etag: string | null) {
 }
 
 const runLabel = computed(() => {
-  if (phase.value === 'waiting') return 'Running';
-  if (phase.value === 'replaying') return 'Tracing';
-  return run.value ? 'Run again' : 'Run the scenario';
+  const b = t.value.blueprint;
+  if (phase.value === 'waiting') return b.running;
+  if (phase.value === 'replaying') return b.tracing;
+  return run.value ? b.runAgain : b.run;
 });
 
 const walkLabel = computed(() => {
-  if (walking.value) return 'Pause';
-  return atLast.value ? 'Replay' : 'Play';
+  const b = t.value.blueprint;
+  if (walking.value) return b.pause;
+  return atLast.value ? b.replay : b.play;
 });
+
+function stepLabel(frame: BlueprintFrame) {
+  return t.value.blueprint.stepLabels[frame.operation] ?? frame.label;
+}
+
+/** The hero's primary action: bring the sheet into view, then run. */
+function runFromHero() {
+  sheetEl.value?.scrollIntoView({ behavior: reducedMotion.value ? 'auto' : 'smooth', block: 'start' });
+  void handleRun();
+}
+
+async function copyEvidence() {
+  if (!run.value) return;
+  const text = runSummary(run.value, frames.value, locale.value, window.location.href);
+  try {
+    await navigator.clipboard.writeText(text);
+    copied.value = true;
+    if (copiedTimer !== null) window.clearTimeout(copiedTimer);
+    copiedTimer = window.setTimeout(() => (copied.value = false), 2000);
+  } catch {
+    // Clipboard blocked (insecure context or permission): the JSON panel remains available.
+    showJson.value = true;
+  }
+}
 </script>
 
 <template>
   <section class="stage" aria-label="Live architecture blueprint">
+    <HeroBand @run="runFromHero" />
+
     <!-- Sheet with the start overlay -->
-    <div :class="['glass-panel', 'sheet', { 'has-overlay': !run && phase !== 'waiting' }]">
+    <div ref="sheetEl" :class="['glass-panel', 'sheet', { 'has-overlay': !run && phase !== 'waiting' }]">
       <ArchitectureBlueprint
         :frame="currentFrame"
         :visited-nodes="visitedNodes"
@@ -257,9 +299,9 @@ const walkLabel = computed(() => {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <polygon points="6 3 20 12 6 21 6 3"></polygon>
           </svg>
-          <span>Run the scenario</span>
+          <span>{{ t.blueprint.overlayCta }}</span>
         </button>
-        <span class="overlay-meta font-mono">5 real requests · about 1 s · no sign-up</span>
+        <span class="overlay-meta font-mono">{{ t.blueprint.overlayMeta }}</span>
         <span v-if="errorMessage" class="error font-mono" role="alert">{{ errorMessage }}</span>
       </div>
     </div>
@@ -268,7 +310,7 @@ const walkLabel = computed(() => {
     <div class="glass-panel narrator">
       <div class="narration" aria-live="polite">
         <template v-if="selectedGuide">
-          <span class="eyebrow eyebrow-layer">Layer · {{ selectedGuide.name }}</span>
+          <span class="eyebrow eyebrow-layer">{{ format(t.blueprint.layer, { name: selectedGuide.name }) }}</span>
           <h2 class="narr-title">{{ selectedGuide.name }}</h2>
           <p class="narr-body">{{ selectedGuide.role }}</p>
         </template>
@@ -281,50 +323,48 @@ const walkLabel = computed(() => {
 
       <div class="evidence">
         <template v-if="selectedGuide">
-          <span class="evidence-head">Responsibilities</span>
+          <span class="evidence-head">{{ t.blueprint.responsibilities }}</span>
           <ul class="duties">
             <li v-for="duty in selectedGuide.responsibilities" :key="duty">{{ duty }}</li>
           </ul>
-          <button type="button" class="btn btn-secondary small" @click="selectedNode = null">Back to the run</button>
+          <button type="button" class="btn btn-secondary small" @click="selectedNode = null">{{ t.blueprint.backToRun }}</button>
         </template>
         <template v-else-if="narration.evidence">
-          <span class="evidence-head">Measured on the server</span>
+          <span class="evidence-head">{{ t.blueprint.measured }}</span>
           <dl class="facts">
             <div class="fact fact-wide">
-              <dt>Request</dt>
+              <dt>{{ t.blueprint.request }}</dt>
               <dd class="font-mono">{{ narration.evidence.method }} {{ shortPath(narration.evidence.path) }}</dd>
             </div>
             <div class="fact">
-              <dt>Status</dt>
+              <dt>{{ t.blueprint.status }}</dt>
               <dd><span :class="['status-pill', currentFrame.tone === 'rejected' ? 'is-rejected' : 'is-ok']">{{ narration.evidence.status }}</span></dd>
             </div>
             <div class="fact">
-              <dt>Server time</dt>
+              <dt>{{ t.blueprint.serverTime }}</dt>
               <dd class="font-mono">{{ narration.evidence.durationMs }} ms</dd>
             </div>
             <div class="fact">
-              <dt>Version</dt>
+              <dt>{{ t.blueprint.version }}</dt>
               <dd class="font-mono">{{ shortEtag(narration.evidence.etag) }}</dd>
             </div>
           </dl>
         </template>
         <template v-else>
-          <span class="evidence-head">How to read it</span>
+          <span class="evidence-head">{{ t.blueprint.howToReadTitle }}</span>
           <ul class="duties">
-            <li>Select any layer to see what it does.</li>
-            <li>After a run, use the arrows or the keys ← → to step.</li>
-            <li>Green is the path a request took; red is a refusal.</li>
+            <li v-for="hint in t.blueprint.howToRead" :key="hint">{{ hint }}</li>
           </ul>
         </template>
       </div>
 
       <div class="controls">
         <div v-if="frames.length" class="stepper" role="group" aria-label="Walkthrough">
-          <button type="button" class="btn btn-secondary step-btn" :disabled="busy || currentIndex <= 1" aria-label="Previous step" @click="goPrevious">‹</button>
+          <button type="button" class="btn btn-secondary step-btn" :disabled="busy || currentIndex <= 1" :aria-label="t.blueprint.prev" @click="goPrevious">‹</button>
           <ol class="dots" aria-hidden="true">
             <li v-for="frame in frames" :key="frame.index" :class="{ on: frame.index <= currentIndex, current: frame.index === currentIndex, rejected: frame.tone === 'rejected' }"></li>
           </ol>
-          <button type="button" class="btn btn-secondary step-btn" :disabled="busy || atLast" aria-label="Next step" @click="goNext">›</button>
+          <button type="button" class="btn btn-secondary step-btn" :disabled="busy || atLast" :aria-label="t.blueprint.next" @click="goNext">›</button>
           <button type="button" class="btn btn-secondary walk-btn" :disabled="busy" :aria-pressed="walking" @click="toggleWalkthrough">
             <svg v-if="walking" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="5" height="16" /><rect x="14" y="4" width="5" height="16" /></svg>
             <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3" /></svg>
@@ -339,8 +379,8 @@ const walkLabel = computed(() => {
           </button>
           <span class="readout font-mono" aria-live="polite">
             <template v-if="phase === 'waiting'">{{ elapsedLabel }}</template>
-            <template v-else-if="run">{{ run.response.totalDurationMs }} ms server · {{ elapsedLabel }} wall</template>
-            <template v-else>POST /api/v1/demo/run</template>
+            <template v-else-if="run">{{ format(t.blueprint.readoutDone, { server: run.response.totalDurationMs, wall: (elapsedMs / 1000).toFixed(1) }) }}</template>
+            <template v-else>{{ t.blueprint.readoutIdle }}</template>
           </span>
         </div>
 
@@ -352,12 +392,13 @@ const walkLabel = computed(() => {
             aria-live="polite"
           >
             <span class="source-dot" aria-hidden="true"></span>
-            {{ warmState === 'pending' ? 'Waking free-tier database' : 'Database ready' }}
+            {{ warmState === 'pending' ? t.blueprint.waking : t.blueprint.ready }}
           </span>
           <SourceChip v-if="run" :source="run.source" />
-          <span v-if="run" class="run-id font-mono">run {{ run.response.runId }}</span>
+          <span v-if="run" class="run-id font-mono">{{ format(t.blueprint.runId, { id: run.response.runId }) }}</span>
           <span v-if="errorMessage && run" class="error font-mono" role="alert">{{ errorMessage }}</span>
-          <button v-if="run" type="button" class="btn btn-secondary small json-btn" :aria-expanded="showJson" @click="showJson = !showJson">JSON</button>
+          <button v-if="run && phase === 'done'" type="button" class="btn btn-secondary small" :aria-live="copied ? 'polite' : undefined" @click="copyEvidence">{{ copied ? t.blueprint.copied : t.blueprint.copy }}</button>
+          <button v-if="run" type="button" class="btn btn-secondary small json-btn" :aria-expanded="showJson" @click="showJson = !showJson">{{ t.blueprint.json }}</button>
         </div>
       </div>
     </div>
@@ -379,19 +420,19 @@ const walkLabel = computed(() => {
           >
             <span class="rail-node font-mono">{{ frame.index }}</span>
             <span class="rail-text">
-              <span class="rail-label">{{ frame.label }}</span>
+              <span class="rail-label">{{ stepLabel(frame) }}</span>
               <span class="rail-meta font-mono">{{ frame.status }} · {{ frame.durationMs }} ms</span>
             </span>
           </button>
         </li>
       </template>
       <template v-else>
-        <li v-for="(label, i) in PLANNED_STEPS" :key="label" class="rail-item">
+        <li v-for="(label, i) in plannedSteps" :key="label" class="rail-item">
           <div class="rail-btn">
             <span class="rail-node font-mono">{{ i + 1 }}</span>
             <span class="rail-text">
               <span class="rail-label">{{ label }}</span>
-              <span class="rail-meta font-mono">{{ i === 2 ? 'expects 412' : 'planned' }}</span>
+              <span class="rail-meta font-mono">{{ i === 2 ? t.blueprint.expects412 : t.blueprint.planned }}</span>
             </span>
           </div>
         </li>
@@ -400,11 +441,14 @@ const walkLabel = computed(() => {
 
     <!-- Legend -->
     <ul class="legend" aria-label="Legend">
-      <li><span class="swatch swatch-path" aria-hidden="true"></span>Request path</li>
-      <li><span class="swatch swatch-reject" aria-hidden="true"></span>Rejected by the concurrency guard</li>
-      <li><span class="swatch swatch-idle" aria-hidden="true"></span>Not visited yet</li>
-      <li><span class="swatch swatch-select" aria-hidden="true"></span>Selected layer</li>
+      <li><span class="swatch swatch-path" aria-hidden="true"></span>{{ t.blueprint.legend.path }}</li>
+      <li><span class="swatch swatch-reject" aria-hidden="true"></span>{{ t.blueprint.legend.reject }}</li>
+      <li><span class="swatch swatch-idle" aria-hidden="true"></span>{{ t.blueprint.legend.idle }}</li>
+      <li><span class="swatch swatch-select" aria-hidden="true"></span>{{ t.blueprint.legend.selected }}</li>
     </ul>
+
+    <ValueCards @navigate="emit('navigate', $event)" />
+    <EngageBand />
 
     <div v-if="run && showJson" class="glass-panel json-panel">
       <pre class="font-mono"><code>{{ JSON.stringify(run.response, null, 2) }}</code></pre>
@@ -470,7 +514,7 @@ const walkLabel = computed(() => {
 /* Narrator band */
 .narrator {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1.3fr) minmax(300px, 1fr) auto;
   gap: 1.25rem 2rem;
   padding: 1.1rem 1.4rem;
   align-items: start;
@@ -543,8 +587,11 @@ const walkLabel = computed(() => {
 }
 
 .fact dt {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .fact dd {

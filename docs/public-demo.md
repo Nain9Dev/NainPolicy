@@ -1,9 +1,26 @@
 # Public portfolio demo
 
-- Document version: 0.5
+- Document version: 0.6
 - Status: Active evidence
 - Date: 2026-11-03
-- Governing decisions: ADR-005, ADR-006, ADR-007 and ADR-008 (proposed)
+- Governing decisions: ADR-005, ADR-006, ADR-007, ADR-008 and ADR-009 (proposed)
+
+## Commercial layer and locale, 2026-11-03
+
+Spec 007 added the hero, the problem cards, the engagement band, the bilingual catalogue, hash
+routes and the copyable run summary. Observed with Playwright and Chromium against the production
+build (`vite preview`), without a backend, so every run was labelled `Simulated`:
+
+| Check | Observation |
+|---|---|
+| First screen, `es-ES` browser, 1440 × 1000 | `lang="es"`; hero `Cada cambio de póliza, protegido y registrado`, lede, `Ver la demo en vivo`, `Hablar con naindev`, four proof chips; the blueprint sheet is visible under the hero without scrolling |
+| First screen, `en-US` browser | `lang="en"`; hero `Every policy change, protected and on record` |
+| Hero run button | Scrolls the sheet into view and runs; walkthrough narrates in the page language (`Paso 3 de 5 · Rechazo esperado` / `Step 3 of 5 · Rejected as expected`) |
+| Copy evidence | Clipboard holds the run id, `Simulada · en el navegador` or `Simulated · in-browser`, server time, five step lines with `{id}` in place of the GUID, final state, ledger rows and the page address |
+| Problem card 1 | Opens the Concurrency tab and sets `#concurrency`; card 3 links to `docs/traceability.md` |
+| Deep link `#audit` | Opens the Audit tab directly |
+| Locale toggle | Switches every header and control, sets `lang`, stores `nainpolicy_locale` |
+| Mobile 390 px, `es-ES` | Hero, chips, sheet, band, rail, cards and engagement band stack; `scrollWidth` 390 |
 
 ## Client walkthrough, 2026-11-03
 

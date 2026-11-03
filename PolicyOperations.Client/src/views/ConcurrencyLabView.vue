@@ -2,8 +2,11 @@
 import { ref } from 'vue';
 import SourceChip from '../components/SourceChip.vue';
 import ViewHeader from '../components/ViewHeader.vue';
+import { useLocale } from '../i18n/locale';
 import { api, ApiError } from '../services/api';
 import type { PublicDemoRunResponse, ScenarioSource } from '../types/contracts';
+
+const { t } = useLocale();
 
 const isRunning = ref(false);
 const racePhase = ref<'idle' | 'read' | 'alpha_committed' | 'beta_rejected' | 'completed'>('idle');
@@ -93,11 +96,7 @@ async function runRaceSimulation() {
 <template>
   <div class="concurrency-lab">
     <!-- Lab Explanation Card -->
-    <ViewHeader
-      eyebrow="Two operators, one policy"
-      title="Why a stale write is refused"
-      lede="Alpha and Beta read the same policy. Alpha saves first, so the stored version changes; Beta's request still carries the old version and gets a 412 instead of silently overwriting Alpha's work."
-    />
+    <ViewHeader :eyebrow="t.views.concurrency.eyebrow" :title="t.views.concurrency.title" :lede="t.views.concurrency.lede" />
 
     <div class="glass-panel info-card">
       <div class="lab-controls">

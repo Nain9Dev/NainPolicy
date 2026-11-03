@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { describeSource } from '../architecture/narration';
+import { useLocale } from '../i18n/locale';
 import type { ScenarioSource } from '../types/contracts';
 
 /** Honest origin of a result (ADR-007): the simulated label never uses the live colour. */
 const props = defineProps<{ source: ScenarioSource }>();
-const text = computed(() => describeSource(props.source));
+const { locale } = useLocale();
+const text = computed(() => describeSource(props.source, locale.value));
 </script>
 
 <template>
