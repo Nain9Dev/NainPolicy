@@ -212,7 +212,7 @@ function handleStaleAttempt() {
       <div class="actions-column">
         <!-- Create Draft Card -->
         <div class="glass-panel form-card">
-          <h4>{{ t.lifecycle.step1 }}</h4>
+          <h3 class="card-title">{{ t.lifecycle.step1 }}</h3>
           <div class="form-group">
             <label for="lc-number">{{ t.lifecycle.policyNumber }}</label>
             <input id="lc-number" v-model="createForm.policyNumber" type="text" class="input-field" placeholder="SYNTH-POL-XXXX" />
@@ -245,7 +245,7 @@ function handleStaleAttempt() {
 
         <!-- Activate Policy Card -->
         <div class="glass-panel form-card" :class="{ disabled: !isDraft }">
-          <h4>{{ t.lifecycle.step2 }}</h4>
+          <h3 class="card-title">{{ t.lifecycle.step2 }}</h3>
           <div class="form-group">
             <label for="lc-party">{{ t.lifecycle.insuredParty }}</label>
             <input id="lc-party" v-model="activateForm.insuredPartyReference" type="text" class="input-field" :disabled="!isDraft" />
@@ -279,7 +279,7 @@ function handleStaleAttempt() {
 
         <!-- Cancel Policy Card -->
         <div class="glass-panel form-card" :class="{ disabled: !isActive }">
-          <h4>{{ t.lifecycle.step3 }}</h4>
+          <h3 class="card-title">{{ t.lifecycle.step3 }}</h3>
           <div class="form-group">
             <label for="lc-reason">{{ t.lifecycle.reason }}</label>
             <input id="lc-reason" v-model="cancelForm.reason" type="text" class="input-field" :disabled="!isActive" />
@@ -302,7 +302,7 @@ function handleStaleAttempt() {
 
         <!-- Stale write, on purpose -->
         <div class="glass-panel form-card stale-card" :class="{ disabled: !isActive || !previousEtag }">
-          <h4>{{ t.lifecycle.tryStale }}</h4>
+          <h3 class="card-title">{{ t.lifecycle.tryStale }}</h3>
           <p class="stale-hint">{{ t.lifecycle.tryStaleHint }}</p>
           <div v-if="previousEtag" class="font-mono stale-version">If-Match: {{ previousEtag }}</div>
           <button type="button" class="btn btn-danger full-btn" :disabled="isLoading || !isActive || !previousEtag" @click="handleStaleAttempt">
@@ -501,7 +501,7 @@ function handleStaleAttempt() {
   flex-shrink: 0;
 }
 
-.notice-body h4 {
+.notice-body h3 {
   font-size: 0.95rem;
   margin-bottom: 0.25rem;
   color: #c7d2fe;
@@ -565,7 +565,7 @@ function handleStaleAttempt() {
   pointer-events: none;
 }
 
-.form-card h4 {
+.form-card h3 {
   font-family: var(--font-heading);
   font-size: 1.05rem;
   margin-bottom: 1rem;

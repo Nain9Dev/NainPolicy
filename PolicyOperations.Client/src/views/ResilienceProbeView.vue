@@ -96,7 +96,7 @@ async function probeReadiness() {
       <!-- Liveness Card -->
       <div class="glass-panel probe-card">
         <div class="card-head">
-          <h4>{{ t.resilience.apiProcess }}</h4>
+          <h3 class="card-title">{{ t.resilience.apiProcess }}</h3>
           <span
             v-if="latestLiveness"
             :class="['badge', latestLiveness.status === 'Healthy' ? 'badge-emerald' : 'badge-rose']"
@@ -120,7 +120,7 @@ async function probeReadiness() {
       <!-- Readiness Card -->
       <div class="glass-panel probe-card">
         <div class="card-head">
-          <h4>{{ t.resilience.dbConnection }}</h4>
+          <h3 class="card-title">{{ t.resilience.dbConnection }}</h3>
           <span
             v-if="latestReadiness"
             :class="['badge', latestReadiness.status === 'Healthy' ? 'badge-emerald' : 'badge-rose']"
@@ -153,28 +153,28 @@ async function probeReadiness() {
         <div class="rule-item">
           <div class="rule-number">01</div>
           <div class="rule-body">
-            <h4>{{ t.resilience.promises[0] }}</h4>
+            <h3 class="card-title">{{ t.resilience.promises[0] }}</h3>
           </div>
         </div>
 
         <div class="rule-item">
           <div class="rule-number">02</div>
           <div class="rule-body">
-            <h4>{{ t.resilience.promises[1] }}</h4>
+            <h3 class="card-title">{{ t.resilience.promises[1] }}</h3>
           </div>
         </div>
 
         <div class="rule-item">
           <div class="rule-number">03</div>
           <div class="rule-body">
-            <h4>{{ t.resilience.promises[2] }}</h4>
+            <h3 class="card-title">{{ t.resilience.promises[2] }}</h3>
           </div>
         </div>
 
         <div class="rule-item">
           <div class="rule-number">04</div>
           <div class="rule-body">
-            <h4>{{ t.resilience.promises[3] }}</h4>
+            <h3 class="card-title">{{ t.resilience.promises[3] }}</h3>
           </div>
         </div>
       </div>
@@ -261,7 +261,7 @@ async function probeReadiness() {
   margin-bottom: 0.75rem;
 }
 
-.card-head h4 {
+.card-head h3 {
   font-family: var(--font-heading);
   font-size: 1.15rem;
   font-weight: 700;
@@ -342,7 +342,7 @@ async function probeReadiness() {
   color: var(--accent-cyan);
 }
 
-.rule-body h4 {
+.rule-body h3 {
   font-size: 0.95rem;
   margin-bottom: 0.35rem;
   color: var(--text-main);

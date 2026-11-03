@@ -56,7 +56,7 @@ const tabs = computed<{ id: TabId; label: string }[]>(() => [
         </button>
         <a :href="DOCS_URL" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">{{ t.nav.openapi }}</a>
         <a :href="LINKS.repository" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">{{ t.nav.source }}</a>
-        <button type="button" class="btn btn-secondary locale-btn" :title="t.nav.switchTitle" :aria-label="t.nav.switchTitle" @click="toggleLocale">{{ t.nav.switchLabel }}</button>
+        <button type="button" class="btn btn-secondary locale-btn" :title="t.nav.switchTitle" :aria-label="`${t.nav.switchLabel}: ${t.nav.switchTitle}`" @click="toggleLocale">{{ t.nav.switchLabel }}</button>
       </div>
     </div>
 

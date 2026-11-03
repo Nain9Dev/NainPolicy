@@ -219,11 +219,6 @@ const readout = computed(() => {
   return 'READY · RUN THE SCENARIO TO TRACE A REQUEST';
 });
 
-function nodeLabel(id: NodeId) {
-  const layer = guide.value[id];
-  const state = isLit(id) ? ', on the current request path' : '';
-  return `${layer.name}: ${layer.tagline}${state}.`;
-}
 
 function onNodeKey(event: KeyboardEvent, id: NodeId) {
   if (event.key === 'Enter' || event.key === ' ') {
@@ -245,8 +240,9 @@ const rootClass = computed(() => [
   <svg
     :class="rootClass"
     :viewBox="`0 0 ${layout.width} ${layout.height}`"
-    role="img"
-    aria-labelledby="bp-title bp-desc"
+    role="group"
+    aria-labelledby="bp-title"
+    aria-describedby="bp-desc"
     preserveAspectRatio="xMidYMid meet"
   >
     <title id="bp-title">NainPolicy architecture blueprint</title>
@@ -359,28 +355,35 @@ const rootClass = computed(() => [
       v-for="id in NODE_IDS"
       :key="id"
       :class="['node', `node-${id}`, { lit: isLit(id), visited: isVisited(id), selected: selectedNode === id, guard: id === 'application' && frame.guardHit }]"
-      role="button"
-      tabindex="0"
-      :aria-label="nodeLabel(id)"
-      :aria-pressed="selectedNode === id"
       @click="emit('selectNode', id)"
-      @keydown="onNodeKey($event, id)"
     >
-      <rect :x="layout.nodes[id].x" :y="layout.nodes[id].y" :width="layout.nodes[id].w" :height="layout.nodes[id].h" class="node-box" rx="4" />
+      <rect
+        :x="layout.nodes[id].x"
+        :y="layout.nodes[id].y"
+        :width="layout.nodes[id].w"
+        :height="layout.nodes[id].h"
+        class="node-box"
+        rx="4"
+        role="button"
+        tabindex="0"
+        :aria-labelledby="`bp-${id}-title bp-${id}-tag`"
+        :aria-pressed="selectedNode === id"
+        @keydown="onNodeKey($event, id)"
+      />
 
       <!-- SQL Server has its own header -->
       <template v-if="id === 'sql'">
         <ellipse :cx="sqlGeom.cyl.cx" :cy="sqlGeom.cyl.cy" rx="36" ry="9" class="cylinder" />
-        <text :x="sqlGeom.title.x" :y="sqlGeom.title.y" class="node-title" :text-anchor="sqlGeom.title.anchor">SQL Server</text>
-        <text :x="sqlGeom.tag.x" :y="sqlGeom.tag.y" class="node-plain" :text-anchor="sqlGeom.title.anchor">{{ guide.sql.tagline }}</text>
+        <text :id="`bp-${id}-title`" :x="sqlGeom.title.x" :y="sqlGeom.title.y" class="node-title" :text-anchor="sqlGeom.title.anchor">SQL Server</text>
+        <text :id="`bp-${id}-tag`" :x="sqlGeom.tag.x" :y="sqlGeom.tag.y" class="node-plain" :text-anchor="sqlGeom.title.anchor">{{ guide.sql.tagline }}</text>
       </template>
       <template v-else>
-        <text :x="layout.nodes[id].x + PAD" :y="layout.nodes[id].y + 28" class="node-title">{{ guide[id].name }}</text>
-        <text :x="layout.nodes[id].x + PAD" :y="layout.nodes[id].y + 46" class="node-plain">{{ guide[id].tagline }}</text>
+        <text :id="`bp-${id}-title`" :x="layout.nodes[id].x + PAD" :y="layout.nodes[id].y + 28" class="node-title">{{ guide[id].name }}</text>
+        <text :id="`bp-${id}-tag`" :x="layout.nodes[id].x + PAD" :y="layout.nodes[id].y + 46" class="node-plain">{{ guide[id].tagline }}</text>
       </template>
 
       <!-- Chips -->
-      <g class="chips">
+      <g class="chips" aria-hidden="true">
         <template v-for="chip in nodeChips[id]" :key="chip.text">
           <rect :x="chip.x" :y="chip.y" :width="chip.w" :height="CHIP_H" class="chip" rx="2" />
           <text :x="chip.x + 9" :y="chip.y + 16" class="chip-text">{{ chip.text }}</text>
@@ -389,6 +392,7 @@ const rootClass = computed(() => [
 
       <!-- Application: concurrency guard -->
       <template v-if="id === 'application'">
+        <g aria-hidden="true">
         <rect :x="guard.x" :y="guard.y" :width="guard.w" :height="guard.h" class="guard" rx="2" />
         <text :x="guard.x + 10" :y="guard.y + 21" class="guard-title">concurrency guard</text>
         <text :x="guard.x + 10" :y="guard.y + 41" class="guard-text">If-Match ≟ stored version</text>
@@ -396,19 +400,23 @@ const rootClass = computed(() => [
           <circle :cx="guard.x + guard.w" :cy="guard.y" r="20" class="burst" />
           <text :x="guard.x + guard.w" :y="guard.y + 5" class="burst-text" text-anchor="middle">412</text>
         </g>
+        </g>
       </template>
 
       <!-- Domain: lifecycle states -->
       <template v-if="id === 'domain'">
+        <g aria-hidden="true">
         <template v-for="(s, i) in states" :key="s.state">
           <rect :x="s.x" :y="s.y" :width="s.w" :height="s.h" :class="['state', stateClass(s.state)]" rx="3" />
           <text :x="s.x + 10" :y="s.y + 20" :class="['state-text', stateClass(s.state)]">{{ s.state }}</text>
           <text v-if="i < 2" :x="s.x + s.w - 10" :y="s.y + 20" class="state-arrow" text-anchor="end">↓</text>
         </template>
+        </g>
       </template>
 
       <!-- SQL Server: tables -->
       <template v-if="id === 'sql'">
+        <g aria-hidden="true">
         <g class="table">
           <rect :x="sqlGeom.policies.x" :y="sqlGeom.policies.y" :width="sqlGeom.policies.w" height="22" class="table-head" rx="2" />
           <text :x="sqlGeom.policies.x + 8" :y="sqlGeom.policies.y + 15" class="table-title">Policies</text>
@@ -430,10 +438,11 @@ const rootClass = computed(() => [
         </g>
         <text :x="sqlGeom.foot.x" :y="sqlGeom.foot.y" class="node-sub" :text-anchor="sqlGeom.foot.anchor">1 transaction</text>
         <text :x="sqlGeom.foot.x" :y="sqlGeom.foot.y + 18" class="node-sub" :text-anchor="sqlGeom.foot.anchor">policy + audit row</text>
+        </g>
       </template>
 
       <!-- Footer line -->
-      <text v-if="FOOTERS[id]" :x="layout.nodes[id].x + PAD" :y="layout.nodes[id].y + layout.nodes[id].h - 14" class="node-sub">{{ FOOTERS[id] }}</text>
+      <text v-if="FOOTERS[id]" aria-hidden="true" :x="layout.nodes[id].x + PAD" :y="layout.nodes[id].y + layout.nodes[id].h - 14" class="node-sub">{{ FOOTERS[id] }}</text>
     </g>
 
     <!-- Status readout -->
@@ -468,6 +477,9 @@ const rootClass = computed(() => [
 /* Nodes */
 .node {
   cursor: pointer;
+}
+
+.node-box:focus {
   outline: none;
 }
 
@@ -480,7 +492,7 @@ const rootClass = computed(() => [
 }
 
 .node:hover .node-box,
-.node:focus-visible .node-box {
+.node-box:focus-visible {
   stroke: #3c5f94;
   stroke-dasharray: none;
 }
@@ -502,7 +514,7 @@ const rootClass = computed(() => [
 }
 
 .node.selected .node-box,
-.node:focus-visible .node-box {
+.node-box:focus-visible {
   stroke: var(--accent-cyan);
   stroke-width: 2;
   stroke-dasharray: none;
@@ -729,7 +741,7 @@ const rootClass = computed(() => [
   font-family: var(--font-heading);
   font-size: 12.5px;
   font-weight: 700;
-  fill: #64748b;
+  fill: #8b9db6;
   transition: fill 0.3s ease;
 }
 
@@ -781,7 +793,7 @@ const rootClass = computed(() => [
 }
 
 .table-cell.dim {
-  fill: #64748b;
+  fill: #8b9db6;
   letter-spacing: 0.08em;
 }
 

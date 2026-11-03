@@ -43,7 +43,7 @@
 
   --text-main: #f7f9fc;
   --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  --text-dim: #8b9db6; /* 6.1:1 on the surface colour (WCAG 2.2 AA needs 4.5:1) */
 
   --font-heading: 'Urbanist', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-body: 'Urbanist', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
