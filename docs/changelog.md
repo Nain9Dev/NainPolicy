@@ -17,7 +17,7 @@ Governing spec: 015 (`Proposed`). Client only.
 - The card is rendered by `npm run build:og` from the hero copy, the brand tokens and the
   self-hosted fonts, and committed; the metadata declares its size, an alternative text, `es_ES`
   and `en_GB` as the alternate locale.
-- 3 new client tests (125 in total).
+- 3 new client tests (134 in total).
 
 ## 0.27 — 2026-11-03 — First paint without a third party in the way
 
