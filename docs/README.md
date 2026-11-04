@@ -68,6 +68,7 @@ If two approved sources conflict and neither has precedence, the affected work s
 | `specs/013-human-values/` | Money and dates in the page locale in the practice inspector | 0.1 | Proposed | None |
 | `docs/decisions/ADR-011-self-hosted-fonts.md` | Fonts served from the own origin under their licence; no third party in the first paint | 0.1 | Proposed | None |
 | `specs/014-first-paint/` | Self-hosted fonts, deferred brand sheet, preload, `robots.txt`; measured with Lighthouse | 0.1 | Proposed | None |
+| `specs/015-social-card/` | Own Open Graph card rendered from the hero copy by a repository script | 0.1 | Proposed | None |
 | `AGENTS.md` | Canonical constitution for agents and contributors | 0.1 | Active | None |
 | `SECURITY.md` | Vulnerability reporting and security posture | 0.1 | Active | None |
 

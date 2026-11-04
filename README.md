@@ -77,7 +77,7 @@ cuando la base de datos gratuita duerme). Cada resultado dice si es `Live` o `Si
 - Evidencia por paso en la demo: método, ruta, estado, ETag y duración medida en servidor.
 - Cabeceras de seguridad base en todas las respuestas y CSP restrictiva en la página de demo.
 - Tests de dominio, de aplicación sin base de datos, de API, autorización, aislamiento y migrations contra SQL Server 2025 real.
-- Cliente Vue 3 bilingüe (español/inglés) con blueprint narrado, modo práctica sin token, carrera de concurrencia, historial con continuidad entre pestañas y sondas de salud honestas; sus 116 tests y su build corren en CI.
+- Cliente Vue 3 bilingüe (español/inglés) con blueprint narrado, modo práctica sin token, carrera de concurrencia, historial en frases llanas con continuidad entre pestañas, sondas de salud honestas, fuentes autoalojadas sin terceros en el primer pintado y tarjeta de previsualización propia; sus 134 tests y su build corren en CI.
 
 ## Arquitectura y Diagrama C4
 
@@ -169,7 +169,7 @@ Abre [Probar API](https://nain-policy-demo-api.azurewebsites.net/demo/) para eje
 - 4 tests de migrations y recuperación segura.
 - 68 tests en la suite; 21 utilizan SQL Server real.
 - CI ejecuta la suite de SQL Server contra un contenedor real de SQL Server en cada push, así que la afirmación anterior la verifica el pipeline, no el README.
-- 116 tests Vitest del cliente (narración, recorrido, layout, catálogo bilingüe, origen de cada operación, sondas de salud) y su build en el trabajo `client-tests` de CI.
+- 134 tests Vitest del cliente (narración, recorrido, layout, catálogo bilingüe, origen de cada operación, sondas de salud, historial en frases, importes y fechas legibles, primer pintado sin terceros, tarjeta social) y su build en el trabajo `client-tests` de CI.
 - CodeQL analiza el código C# en cada push y semanalmente; Dependabot mantiene NuGet y Actions al día.
 - EF Core sin cambios de modelo pendientes de migration.
 - Auditoría NuGet sin vulnerabilidades conocidas: el paso de CI falla si aparece alguna.
