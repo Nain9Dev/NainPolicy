@@ -268,6 +268,8 @@ Suite `C` — `PolicyOperations.Client` Vitest (`npm test`, no browser).
 | `REQ-271` 1200 by 630 PNG | C | `ships the card at 1200 by 630 pixels` |
 | `REQ-272` locale and alternate | C | `declares the Spanish locale with English as the alternate` |
 | `REQ-271` (generation) `REQ-273` (claims) | — | `scripts/og-cover.cjs` and the card reviewed in `docs/public-demo.md` (2026-11-03) |
+| `REQ-280` canonical, description length, Open Graph, Twitter card, author link, JSON-LD | C | `declares exactly one canonical link equal to the host root`, `has a single description of 70 to 160 characters`, `agrees between Open Graph, Twitter card and the canonical URL`, `links its author`, `embeds SoftwareApplication JSON-LD that names the author by id` |
+| `REQ-281` robots, sitemap and `llms.txt` | C | `ships a robots.txt that allows the site and advertises the sitemap`, `ships a sitemap that lists the canonical URL`, `ships an llms.txt that starts with an H1 and links the repository and the main site` |
 
 ## Known gaps
 

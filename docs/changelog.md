@@ -7,6 +7,15 @@
 Relevant behavioural changes, newest first. Dates are the date the change was made, not released.
 A change is listed only when it alters behaviour, contracts, evidence or operating boundaries.
 
+## Unreleased — Findable by search and AI engines
+
+Governing spec: `next-seo-discoverability` (`Proposed`). Client only.
+
+- The page declares its author, `SoftwareApplication` structured data and the product name as the
+  Open Graph site name (it said `NainDev`); the description is trimmed to 160 characters.
+- `robots.txt` now advertises the sitemap, and the site root serves `sitemap.xml` and `llms.txt`.
+- 8 new client tests (142 in total).
+
 ## 0.28 — 2026-11-03 — A link preview that says what NainPolicy does
 
 Governing spec: 015 (`Proposed`). Client only.
