@@ -1,0 +1,9 @@
+# NainPolicy
+
+> Insurance policy operations API on .NET 10 and SQL Server with optimistic concurrency and an append-only audit trail, plus a live architecture blueprint that replays a real lifecycle run.
+
+## Links
+
+- [Live demo](https://policy.naindev.com/): the interactive blueprint
+- [Source code](https://github.com/Nain9Dev/NainPolicy): repository, business rules and documentation
+- [Author site](https://www.naindev.com/): Aitor Nain Mendoza Vallejo (NainDev)
