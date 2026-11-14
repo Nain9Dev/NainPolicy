@@ -271,6 +271,15 @@ Suite `C` — `PolicyOperations.Client` Vitest (`npm test`, no browser).
 | `REQ-280` canonical, description length, Open Graph, Twitter card, author link, JSON-LD | C | `declares exactly one canonical link equal to the host root`, `has a single description of 70 to 160 characters`, `agrees between Open Graph, Twitter card and the canonical URL`, `links its author`, `embeds SoftwareApplication JSON-LD that names the author by id` |
 | `REQ-281` robots, sitemap and `llms.txt` | C | `ships a robots.txt that allows the site and advertises the sitemap`, `ships a sitemap that lists the canonical URL`, `ships an llms.txt that starts with an H1 and links the repository and the main site` |
 
+## Installable site (spec next-pwa-install proposed)
+
+| Requirement | Suite | Test |
+|---|---|---|
+| `REQ-290` manifest members and names | C | `declares the standalone manifest members with the approved names` |
+| `REQ-291` icon files at their declared sizes | C | `ships the three icons at their declared sizes, one purpose each`, `ships a 180 px apple touch icon` |
+| `REQ-292` head tags | C | `links the manifest and the touch icon, and sets the iOS app tags` |
+| Icon opacity, maskable safe zone, Chrome installability | — | Install verifier and Chrome `Page.getInstallabilityErrors` on `dist/` (2026-11-14) |
+
 ## Known gaps
 
 1. `OPS-006` has no end-to-end test. Closing it requires a fault-injection seam around the

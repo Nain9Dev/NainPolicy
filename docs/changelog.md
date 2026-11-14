@@ -7,6 +7,15 @@
 Relevant behavioural changes, newest first. Dates are the date the change was made, not released.
 A change is listed only when it alters behaviour, contracts, evidence or operating boundaries.
 
+## Unreleased — Installable on phones
+
+Governing spec: `next-pwa-install` (`Proposed`). Client only.
+
+- `policy.naindev.com` publishes a web app manifest and install icons, so Android Chrome and iOS
+  Safari can add it to the home screen as `NainPolicy` in a window with no browser bar. No service
+  worker and no offline mode.
+- 4 new client tests (146 in total).
+
 ## Unreleased — Findable by search and AI engines
 
 Governing spec: `next-seo-discoverability` (`Proposed`). Client only.
