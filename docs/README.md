@@ -70,6 +70,7 @@ If two approved sources conflict and neither has precedence, the affected work s
 | `specs/014-first-paint/` | Self-hosted fonts, deferred brand sheet, preload, `robots.txt`; measured with Lighthouse | 0.1 | Proposed | None |
 | `specs/015-social-card/` | Own Open Graph card rendered from the hero copy by a repository script | 0.1 | Proposed | None |
 | `specs/next-seo-discoverability/` | Canonical, social metadata, JSON-LD, `robots.txt`, `sitemap.xml` and `llms.txt` for the public site | 0.1 | Proposed | None |
+| `specs/next-pwa-install/` | Web app manifest, install icons and iOS tags so the public site installs on phones | 0.1 | Proposed | None |
 | `AGENTS.md` | Canonical constitution for agents and contributors | 0.1 | Active | None |
 | `SECURITY.md` | Vulnerability reporting and security posture | 0.1 | Active | None |
 
